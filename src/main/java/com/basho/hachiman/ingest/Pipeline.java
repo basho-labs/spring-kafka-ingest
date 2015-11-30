@@ -8,32 +8,48 @@ import com.basho.hachiman.ingest.config.RiakConfig;
  */
 public class Pipeline {
 
-  private String      name;
-  private KafkaConfig kafka;
-  private RiakConfig  riak;
+    private String name;
+    private KafkaConfig kafka;
+    private RiakConfig riak;
+    
+    public Pipeline() {}
 
-  public String getName() {
-    return name;
-  }
+    public Pipeline(String name, KafkaConfig kafka, RiakConfig riak) {
+        this.name = name;
+        this.kafka = kafka;
+        this.riak = riak;
+    }
 
-  public void setName(String name) {
-    this.name = name;
-  }
+    public String getName() {
+        return name;
+    }
 
-  public KafkaConfig getKafka() {
-    return kafka;
-  }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-  public void setKafka(KafkaConfig kafka) {
-    this.kafka = kafka;
-  }
+    public KafkaConfig getKafka() {
+        return kafka;
+    }
 
-  public RiakConfig getRiak() {
-    return riak;
-  }
+    public void setKafka(KafkaConfig kafka) {
+        this.kafka = kafka;
+    }
 
-  public void setRiak(RiakConfig riak) {
-    this.riak = riak;
-  }
+    public RiakConfig getRiak() {
+        return riak;
+    }
+
+    public void setRiak(RiakConfig riak) {
+        this.riak = riak;
+    }
+
+    @Override
+    public String toString() {
+        return "Pipeline [name=" + name + ", kafka=" + kafka + ", riak=" + riak
+                + "]";
+    }
+    
+    
 
 }

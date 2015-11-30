@@ -7,23 +7,39 @@ import java.util.List;
  */
 public class KafkaConfig {
 
-  private String       topic;
-  private List<String> brokers;
+    private String topic;
+    private List<String> brokers;
 
-  public String getTopic() {
-    return topic;
-  }
+    
+    public KafkaConfig() { }
+    
+    public KafkaConfig(String topic, List<String> brokers) {
+        this.topic = topic;
+        this.brokers = brokers;
+    }
 
-  public void setTopic(String topic) {
-    this.topic = topic;
-  }
+    public String getTopic() {
+        return topic;
+    }
 
-  public List<String> getBrokers() {
-    return brokers;
-  }
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
 
-  public void setBrokers(List<String> brokers) {
-    this.brokers = brokers;
-  }
+    public List<String> getBrokers() {
+        return brokers;
+    }
 
+    public void setBrokers(List<String> brokers) {
+        this.brokers = brokers;
+    }
+
+    @Override
+    public String toString() {
+        return "KafkaConfig [topic=" + topic + ", brokers=" + brokers + "]";
+    }
+
+    
+    
+    
 }

@@ -1,3 +1,4 @@
 hachiman:
   ingest:
     group: ${INGEST_GROUP:default}
+    checkСonfigRateMs: 1000

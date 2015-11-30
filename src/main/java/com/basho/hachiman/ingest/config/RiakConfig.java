@@ -7,23 +7,39 @@ import java.util.List;
  */
 public class RiakConfig {
 
-  private String       bucket;
-  private List<String> hosts;
+    private String bucket;
+    private List<String> hosts;
 
-  public String getBucket() {
-    return bucket;
-  }
+    
+    public RiakConfig() { }
+    
+    public RiakConfig(String bucket, List<String> hosts) {
+        super();
+        this.bucket = bucket;
+        this.hosts = hosts;
+    }
 
-  public void setBucket(String bucket) {
-    this.bucket = bucket;
-  }
+    public String getBucket() {
+        return bucket;
+    }
 
-  public List<String> getHosts() {
-    return hosts;
-  }
+    public void setBucket(String bucket) {
+        this.bucket = bucket;
+    }
 
-  public void setHosts(List<String> hosts) {
-    this.hosts = hosts;
-  }
+    public List<String> getHosts() {
+        return hosts;
+    }
 
+    public void setHosts(List<String> hosts) {
+        this.hosts = hosts;
+    }
+
+    @Override
+    public String toString() {
+        return "RiakConfig [bucket=" + bucket + ", hosts=" + hosts + "]";
+    }
+
+    
+    
 }

@@ -49,6 +49,7 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'spring-boot'
 apply plugin: 'docker'
+apply plugin: 'eclipse'
 
 configurations.all {
     exclude group: 'commons-logging'
