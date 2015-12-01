@@ -8,6 +8,8 @@
         </encoder>
     </appender>
 
+    <logger name="com.basho.hachiman" level="debug"/>
+
     <root level="info">
         <appender-ref ref="stdout"/>
     </root>

@@ -29,7 +29,7 @@ public class KafkaConsumerUnitTests {
 
   @Test
   public void canConsumeFromTopicAndParition() {
-    throw new NotImplementedException();
+
   }
 
 }

@@ -114,9 +114,6 @@ dependencies {
     compile "io.reactivex:rxjava:1.0.16",
             "io.reactivex:rxjava-reactive-streams:1.0.1"
 
-    // Netflix OSS
-    compile "com.netflix.archaius:archaius-core:0.6.0"
-
     // Riak
     compile "com.basho.riak:riak-client:$riakClientVersion"
 

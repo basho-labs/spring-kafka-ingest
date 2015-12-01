@@ -1,4 +1,10 @@
 hachiman:
   ingest:
     group: ${INGEST_GROUP:default}
-    checkСonfigRateMs: 1000
+    riak:
+      hosts: ${INGEST_RIAK_HOSTS:localhost:8087}
+    config:
+      riak:
+        timeout: 5
+        pollInterval: 60
+        bucket: ${INGEST_CONFIG_BUCKET:config}
