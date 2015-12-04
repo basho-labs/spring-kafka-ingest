@@ -128,6 +128,9 @@ dependencies {
 
     // GS Collections
     compile "com.goldmansachs:gs-collections:7.0.0"
+    
+    compile "org.apache.commons:commons-lang3:3.4"
+    
 
     // Testing
     testCompile "org.hamcrest:hamcrest-library:1.3",
