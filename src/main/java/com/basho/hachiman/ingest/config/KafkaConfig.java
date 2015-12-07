@@ -27,6 +27,7 @@ public class KafkaConfig {
     return this;
   }
 
+  //TODO: rename to Zookeepers
   public Set<String> getBrokers() {
     return brokers;
   }
