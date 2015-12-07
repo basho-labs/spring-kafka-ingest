@@ -3,8 +3,9 @@ hachiman:
     group: ${INGEST_GROUP:default}
     riak:
       hosts: ${INGEST_RIAK_HOSTS:localhost:8087}
+    kafka:
+      zookeepers: ${INGEST_ZK_HOSTS:localhost:2181}
     config:
       riak:
-        timeout: 5
-        pollInterval: 60
-        bucket: ${INGEST_CONFIG_BUCKET:config}
+        timeout: ${INGEST_RIAK_TIMEOUT_SECS:5}
+        pollInterval: ${INGEST_RIAK_POLL_INTERVAL_SECS:60}

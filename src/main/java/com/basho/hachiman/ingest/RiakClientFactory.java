@@ -6,18 +6,19 @@ import com.basho.riak.client.core.RiakNode;
 import com.gs.collections.impl.list.mutable.FastList;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextStoppedEvent;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.net.UnknownHostException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by jbrisbin on 12/1/15.
  */
 @Component
-public class RiakClientFactory implements FactoryBean<RiakClient> {
+public class RiakClientFactory implements FactoryBean<RiakClient>, ApplicationListener<ContextStoppedEvent> {
 
   @Value("${hachiman.ingest.group}")
   private String ingestGroup;
@@ -25,15 +26,11 @@ public class RiakClientFactory implements FactoryBean<RiakClient> {
   private int    riakTimeout;
   @Value("${hachiman.ingest.config.riak.pollInterval}")
   private int    riakPollInterval;
-  @Value("${hachiman.ingest.config.riak.bucket}")
-  private String riakBucketName;
   @Value("${hachiman.ingest.riak.hosts}")
   private String riakHosts;
 
   private RiakCluster cluster;
   private RiakClient  client;
-
-  private final AtomicBoolean started = new AtomicBoolean(false);
 
   @PostConstruct
   public void init() throws Exception {
@@ -67,6 +64,11 @@ public class RiakClientFactory implements FactoryBean<RiakClient> {
   @Override
   public boolean isSingleton() {
     return true;
+  }
+
+  @Override
+  public void onApplicationEvent(ContextStoppedEvent event) {
+    cluster.shutdown();
   }
 
 }

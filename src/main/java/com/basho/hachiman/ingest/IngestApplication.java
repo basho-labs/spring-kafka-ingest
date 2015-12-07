@@ -1,5 +1,6 @@
 package com.basho.hachiman.ingest;
 
+import com.basho.hachiman.ingest.config.PipelineConfig;
 import com.basho.riak.client.api.RiakClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +20,13 @@ public class IngestApplication implements CommandLineRunner {
   private static final Logger LOG = LoggerFactory.getLogger(IngestApplication.class);
 
   @Autowired
-  private Observable<Pipeline> pipelines;
+  private Observable<PipelineConfig> pipelineConfigs;
   @Autowired
-  private RiakClient           client;
+  private RiakClient                 client;
 
   @Override
   public void run(String... args) throws Exception {
-    pipelines.subscribe(pipeline -> LOG.info("Saw Pipeline: {}", pipeline));
+    pipelineConfigs.subscribe(pipeline -> LOG.info("Saw PipelineConfig: {}", pipeline));
   }
 
   public static void main(String... args) {

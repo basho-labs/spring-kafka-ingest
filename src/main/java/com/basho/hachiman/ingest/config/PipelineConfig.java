@@ -1,21 +1,18 @@
-package com.basho.hachiman.ingest;
-
-import com.basho.hachiman.ingest.config.KafkaConfig;
-import com.basho.hachiman.ingest.config.RiakConfig;
+package com.basho.hachiman.ingest.config;
 
 /**
  * Created by jbrisbin on 11/20/15.
  */
-public class Pipeline {
+public class PipelineConfig {
 
   private String      name;
   private KafkaConfig kafka;
   private RiakConfig  riak;
 
-  public Pipeline() {
+  public PipelineConfig() {
   }
 
-  public Pipeline(String name, KafkaConfig kafka, RiakConfig riak) {
+  public PipelineConfig(String name, KafkaConfig kafka, RiakConfig riak) {
     this.name = name;
     this.kafka = kafka;
     this.riak = riak;
@@ -47,7 +44,7 @@ public class Pipeline {
 
   @Override
   public String toString() {
-    return "Pipeline [name=" + name + ", kafka=" + kafka + ", riak=" + riak + "]";
+    return "PipelineConfig [name=" + name + ", kafka=" + kafka + ", riak=" + riak + "]";
   }
 
   @Override
@@ -55,11 +52,11 @@ public class Pipeline {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    Pipeline pipeline = (Pipeline) o;
+    PipelineConfig pipelineConfig = (PipelineConfig) o;
 
-    if (name != null ? !name.equals(pipeline.name) : pipeline.name != null) return false;
-    if (kafka != null ? !kafka.equals(pipeline.kafka) : pipeline.kafka != null) return false;
-    return !(riak != null ? !riak.equals(pipeline.riak) : pipeline.riak != null);
+    if (name != null ? !name.equals(pipelineConfig.name) : pipelineConfig.name != null) return false;
+    if (kafka != null ? !kafka.equals(pipelineConfig.kafka) : pipelineConfig.kafka != null) return false;
+    return !(riak != null ? !riak.equals(pipelineConfig.riak) : pipelineConfig.riak != null);
   }
 
   @Override

@@ -1,6 +1,6 @@
 package com.basho.hachiman.ingest.fn;
 
-import com.basho.hachiman.ingest.Pipeline;
+import com.basho.hachiman.ingest.config.PipelineConfig;
 import com.basho.hachiman.ingest.config.KafkaConfig;
 import com.basho.hachiman.ingest.config.RiakConfig;
 import com.basho.riak.client.api.commands.datatypes.MapUpdate;
@@ -13,7 +13,7 @@ import rx.functions.Func1;
  * Created by jbrisbin on 12/1/15.
  */
 @Component
-public class PipelineToMapUpdate implements Func1<Pipeline, MapUpdate> {
+public class PipelineToMapUpdate implements Func1<PipelineConfig, MapUpdate> {
 
   public static final Func1<KafkaConfig, MapUpdate> KAFKA_CONFIG_TO_MAPUPD = config -> {
     MapUpdate upd = new MapUpdate();
@@ -37,12 +37,12 @@ public class PipelineToMapUpdate implements Func1<Pipeline, MapUpdate> {
   };
 
   @Override
-  public MapUpdate call(Pipeline pipeline) {
+  public MapUpdate call(PipelineConfig pipelineConfig) {
     MapUpdate upd = new MapUpdate();
 
-    upd.update("name", new RegisterUpdate(pipeline.getName()));
-    upd.update("kafka", KAFKA_CONFIG_TO_MAPUPD.call(pipeline.getKafka()));
-    upd.update("riak", RIAK_CONFIG_TO_MAPUPD.call(pipeline.getRiak()));
+    upd.update("name", new RegisterUpdate(pipelineConfig.getName()));
+    upd.update("kafka", KAFKA_CONFIG_TO_MAPUPD.call(pipelineConfig.getKafka()));
+    upd.update("riak", RIAK_CONFIG_TO_MAPUPD.call(pipelineConfig.getRiak()));
 
     return upd;
   }
