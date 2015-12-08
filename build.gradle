@@ -13,6 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+buildscript {
+    repositories {
+        jcenter()
+        maven { url "http://repo.spring.io/milestone" }
+    }
+
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.3.0.RELEASE',
+                'org.jfrog.buildinfo:build-info-extractor-gradle:3.1.0'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'publishing'
+    id 'com.jfrog.artifactory' version '3.1.0'
+    id 'com.palantir.docker' version '0.3.0'
+}
+
 description = 'Riak TS Ingestion library'
 group = 'com.basho.hachiman'
 
@@ -33,26 +53,8 @@ ext {
     ] as String[]
 }
 
-buildscript {
-    repositories {
-        jcenter()
-        maven { url "http://repo.spring.io/milestone" }
-    }
-
-    dependencies {
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.3.0.RELEASE',
-                'se.transmode.gradle:gradle-docker:1.2',
-                'org.jfrog.buildinfo:build-info-extractor-gradle:3.1.0'
-    }
-}
-
-apply plugin: 'java'
-apply plugin: 'application'
 apply plugin: 'spring-boot'
-apply plugin: 'publishing'
 apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.artifactory'
-apply plugin: 'docker'
 apply plugin: 'eclipse'
 
 configurations.all {
@@ -145,11 +147,46 @@ dependencies {
 
 publishing {
     publications {
-        springBoot(MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
 
             artifact sourcesJar {
                 classifier "sources"
+            }
+
+            pom.withXml {
+                // add all items necessary for maven central publication
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name 'Riak TS Ingestion library'
+                    description 'Riak TS Ingestion library'
+                    url 'https://github.com/basho-labs/hachiman-ingest'
+
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                            comments 'A business-friendly OSS license'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            name 'Jon Brisbin'
+                            email 'jbrisbin@basho.com'
+                            organization 'Basho Technologies, Inc'
+                            organizationUrl 'http://www.basho.com'
+                        }
+                    }
+
+                    scm {
+                        connection 'scm:git:ssh://github.com/basho-labs/hachiman-ingest.git'
+                        developerConnection 'scm:git:ssh://github.com/basho-labs/hachiman-ingest.git'
+                        url 'https://github.com/basho-labs/hachiman-ingest'
+                        tag 'HEAD'
+                    }
+                }
             }
         }
     }
@@ -160,8 +197,9 @@ springBoot {
 }
 
 docker {
-    baseImage 'java:8'
-    maintainer 'Jon Brisbin <jbrisbin@basho.com>'
+    name "basholabs-docker-dockerv2-local.artifactoryonline.com/basholabs/${project.name}:${project.version}"
+    dependsOn bootRepackage
+    files jar.archivePath
 }
 
 artifactory {
@@ -173,28 +211,14 @@ artifactory {
             password = System.getenv('ARTIFACTORY_PASSWORD')
         }
         defaults {
-            publications('springBoot')
+            publications('mavenJava')
             publishArtifacts = true
+            properties {
+                mavenJava 'com.basho.hachiman:*:*:*@*', 'buildInfo.build.name': System.getProperty('buildInfo.build.name', 'gradle')
+            }
         }
     }
     resolve {
         repoKey = 'jcenter'
-    }
-}
-
-task buildDocker(type: Docker, dependsOn: bootRepackage) {
-    push = true
-    registry = 'basholabs-docker-dockerv2-local.artifactoryonline.com'
-    applicationName = "hachiman-ingest"
-    tagVersion = "0.1.0.ALPHA"
-    addFile jar.archivePath, "ingester.jar"
-    runCommand "bash -c 'touch /ingester.jar'"
-    entryPoint(["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/ingester.jar"])
-
-    doFirst {
-        copy {
-            from jar
-            into stageDir
-        }
     }
 }
