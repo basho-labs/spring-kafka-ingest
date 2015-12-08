@@ -8,14 +8,14 @@ import java.util.Set;
 public class KafkaConfig {
 
   private String      topic;
-  private Set<String> brokers;
+  private Set<String> zookeepers;
 
   public KafkaConfig() {
   }
 
-  public KafkaConfig(String topic, Set<String> brokers) {
+  public KafkaConfig(String topic, Set<String> zookeepers) {
     this.topic = topic;
-    this.brokers = brokers;
+    this.zookeepers = zookeepers;
   }
 
   public String getTopic() {
@@ -27,19 +27,18 @@ public class KafkaConfig {
     return this;
   }
 
-  //TODO: rename to Zookeepers
-  public Set<String> getBrokers() {
-    return brokers;
+  public Set<String> getZookeepers() {
+    return zookeepers;
   }
 
-  public KafkaConfig setBrokers(Set<String> brokers) {
-    this.brokers = brokers;
+  public KafkaConfig setZookeepers(Set<String> zookeepers) {
+    this.zookeepers = zookeepers;
     return this;
   }
 
   @Override
   public String toString() {
-    return "KafkaConfig [topic=" + topic + ", brokers=" + brokers + "]";
+    return "KafkaConfig [topic=" + topic + ", zookeepers=" + zookeepers + "]";
   }
 
   @Override
@@ -50,13 +49,13 @@ public class KafkaConfig {
     KafkaConfig that = (KafkaConfig) o;
 
     if (topic != null ? !topic.equals(that.topic) : that.topic != null) return false;
-    return !(brokers != null ? !brokers.equals(that.brokers) : that.brokers != null);
+    return !(zookeepers != null ? !zookeepers.equals(that.zookeepers) : that.zookeepers != null);
   }
 
   @Override
   public int hashCode() {
     int result = topic != null ? topic.hashCode() : 0;
-    result = 31 * result + (brokers != null ? brokers.hashCode() : 0);
+    result = 31 * result + (zookeepers != null ? zookeepers.hashCode() : 0);
     return result;
   }
 

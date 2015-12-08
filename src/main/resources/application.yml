@@ -2,7 +2,7 @@ hachiman:
   ingest:
     group: ${INGEST_GROUP:default}
     riak:
-      hosts: ${INGEST_RIAK_HOSTS:localhost:8087}
+      hosts: ${INGEST_RIAK_HOSTS:localhost:10017}
     kafka:
       zookeepers: ${INGEST_ZK_HOSTS:localhost:2181}
     config:

@@ -1,57 +1,86 @@
 package com.basho.hachiman.ingest.kafka;
 
 
-import java.util.Properties;
-
+import com.basho.hachiman.ingest.config.PipelineConfig;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.KafkaStream;
 import kafka.consumer.Whitelist;
 import kafka.javaapi.consumer.ConsumerConnector;
+import kafka.message.MessageAndMetadata;
 import kafka.serializer.StringDecoder;
-
-import org.apache.commons.lang3.StringUtils;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import rx.Observable;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.util.Properties;
+import java.util.function.Supplier;
 
-public class RxKafkaConnector {
-  
-  private ConsumerConnector consumer = null;
-  
-  public RxKafkaConnector(ConsumerConfig config) {
-    consumer = Consumer.createJavaConsumerConnector(config);
+import static org.springframework.util.StringUtils.collectionToCommaDelimitedString;
+
+/**
+ * Component that creates an {@link Observable} for each topic.
+ */
+@Component
+public class RxKafkaConnector implements Supplier<Observable<String>> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(RxKafkaConnector.class);
+
+  private final StringDecoder decoder = new StringDecoder(null);
+
+  private final PipelineConfig pipelineConfig;
+
+  private ConsumerConnector           consumer;
+  private KafkaStream<String, String> kafkaStream;
+
+  @Autowired
+  public RxKafkaConnector(PipelineConfig pipelineConfig) {
+    this.pipelineConfig = pipelineConfig;
   }
-  
-  public Observable<Record> createObservable(String topic) {
-    
-    StringDecoder decoder = new StringDecoder(null);
-    KafkaStream<String, String> kafkaStream = consumer.createMessageStreamsByFilter(
-        new Whitelist(topic), 
+
+  @PostConstruct
+  public void init() {
+    this.consumer = Consumer.createJavaConsumerConnector(createConfig(pipelineConfig));
+    this.kafkaStream = consumer.createMessageStreamsByFilter(
+        new Whitelist(pipelineConfig.getKafka().getTopic()),
         1,
         decoder,
-        decoder).iterator().next();
-    
-    return Observable
-        .from(kafkaStream)
-        .map(Record::fromKafkaMessage);
+        decoder
+    ).iterator().next();
   }
-  
 
-  
-  public static ConsumerConfig createConfig(String group, Iterable<String> zookeepers, boolean autocommit, boolean startFromLatest) {
+  @PreDestroy
+  public void cleanup() {
+    consumer.shutdown();
+  }
+
+  @Override
+  public Observable<String> get() {
+    return Observable.from(kafkaStream)
+                     .doOnCompleted(() -> {
+                       if (LOG.isDebugEnabled()) {
+                         LOG.debug("Stream complete. Shutting down ConsumerConnector...");
+                       }
+                       consumer.shutdown();
+                     })
+                     .map(MessageAndMetadata::message);
+  }
+
+  public static ConsumerConfig createConfig(PipelineConfig pipeline) {
+    String group      = pipeline.getName();
+    String zookeepers = collectionToCommaDelimitedString(pipeline.getKafka().getZookeepers());
+
     Properties props = new Properties();
     props.put("group.id", group);
-    props.put("zookeeper.connect", StringUtils.join(zookeepers, ','));
-    props.put("auto.offset.reset", startFromLatest ? "largest" : "smallest");
-    props.put("auto.commit.enable", "" + autocommit);
+    props.put("zookeeper.connect", zookeepers);
+    props.put("auto.offset.reset", "largest");
+    props.put("auto.commit.enable", "true");
+
     return new ConsumerConfig(props);
-  }
-  
-  
-  public void close() {
-    if (consumer != null)
-      consumer.shutdown();    
   }
 
 }
