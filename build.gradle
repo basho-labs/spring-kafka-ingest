@@ -145,9 +145,12 @@ dependencies {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        springBoot(MavenPublication) {
             from components.java
-            artifacts = fileTree("${rootProject.buildDir}/libs").include("*.jar")
+
+            artifact sourcesJar {
+                classifier "sources"
+            }
         }
     }
 }
@@ -163,7 +166,7 @@ docker {
 
 artifactoryPublish {
     contextUrl = 'https://basholabs.artifactoryonline.com/basholabs'
-    publications('mavenJava')
+    publications('springBoot')
     clientConfig.publisher.repoKey = 'libs-snapshot-local'
     clientConfig.publisher.username = System.getenv('ARTIFACTORY_USERNAME')
     clientConfig.publisher.password = System.getenv('ARTIFACTORY_PASSWORD')
