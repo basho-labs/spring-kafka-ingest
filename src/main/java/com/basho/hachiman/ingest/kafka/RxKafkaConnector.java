@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import rx.Observable;
+import rx.subjects.BehaviorSubject;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -23,7 +24,7 @@ import java.util.function.Supplier;
 import static org.springframework.util.StringUtils.collectionToCommaDelimitedString;
 
 /**
- * Component that creates an {@link Observable} for each topic.
+ * Component that creates an {@link Observable} into which messages received from Kafka are published.
  */
 @Component
 public class RxKafkaConnector implements Supplier<Observable<String>> {
@@ -32,14 +33,17 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
 
   private final StringDecoder decoder = new StringDecoder(null);
 
-  private final PipelineConfig pipelineConfig;
+  private final PipelineConfig             pipelineConfig;
+  private final BehaviorSubject<Throwable> errorStream;
 
   private ConsumerConnector           consumer;
   private KafkaStream<String, String> kafkaStream;
 
   @Autowired
-  public RxKafkaConnector(PipelineConfig pipelineConfig) {
+  public RxKafkaConnector(PipelineConfig pipelineConfig,
+                          BehaviorSubject<Throwable> errorStream) {
     this.pipelineConfig = pipelineConfig;
+    this.errorStream = errorStream;
   }
 
   @PostConstruct
@@ -67,6 +71,7 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
                        }
                        consumer.shutdown();
                      })
+                     .doOnError(errorStream::onNext)
                      .map(MessageAndMetadata::message);
   }
 

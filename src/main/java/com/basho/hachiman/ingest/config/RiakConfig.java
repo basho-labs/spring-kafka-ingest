@@ -3,7 +3,7 @@ package com.basho.hachiman.ingest.config;
 import java.util.Set;
 
 /**
- * Created by jbrisbin on 11/20/15.
+ * Domain object that encapsulates the configuration necessary to connect to Riak.
  */
 public class RiakConfig {
 

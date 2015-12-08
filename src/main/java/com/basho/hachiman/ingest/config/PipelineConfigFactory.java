@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Created by jbrisbin on 12/8/15.
+ * Component that creates a {@link PipelineConfig} from JSON stored in a property based on the ingest group.
  */
 @Component
 public class PipelineConfigFactory implements FactoryBean<PipelineConfig> {

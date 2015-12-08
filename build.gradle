@@ -109,7 +109,8 @@ dependencies {
     compile "org.slf4j:slf4j-api:$slf4jVersion"
 
     // Spring Boot
-    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.springframework.boot:spring-boot-starter-web",
+            "org.springframework.boot:spring-boot-starter-actuator"
 
     // RxJava
     compile "io.reactivex:rxjava:1.0.16",

@@ -1,7 +1,7 @@
 package com.basho.hachiman.ingest.config;
 
 /**
- * Created by jbrisbin on 11/20/15.
+ * Domain object that encapsulates the configuration settings for an ingestion pipeline.
  */
 public class PipelineConfig {
 
@@ -10,12 +10,6 @@ public class PipelineConfig {
   private RiakConfig  riak;
 
   public PipelineConfig() {
-  }
-
-  public PipelineConfig(String name, KafkaConfig kafka, RiakConfig riak) {
-    this.name = name;
-    this.kafka = kafka;
-    this.riak = riak;
   }
 
   public String getName() {

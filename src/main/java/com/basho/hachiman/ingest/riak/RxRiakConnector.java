@@ -14,47 +14,62 @@ import com.gs.collections.impl.list.mutable.FastList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.stereotype.Component;
 import rx.Observable;
 import rx.functions.Action1;
+import rx.subjects.BehaviorSubject;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.UnknownHostException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.util.StringUtils.commaDelimitedListToStringArray;
 
 /**
- * Created by jbrisbin on 12/7/15.
+ * Component for reacting to string-based messages and parsing them into a {@code List}, turning that into a {@link
+ * Row}
+ * and inserting that into Riak TS.
  */
 @Component
 public class RxRiakConnector implements Action1<String> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RxRiakConnector.class);
 
-  private List<String> schema;
-  private RiakCluster  cluster;
-  private RiakClient   client;
+  private static final String ERROR_COUNT = "hachiman.ingest.errorCount";
+  private static final String MSG_COUNT   = "hachiman.ingest.messageCount";
 
-  private final ObjectMapper       mapper;
-  private final PipelineConfig     pipelineConfig;
-  private final Observable<String> messages;
+  private String[]    schema;
+  private RiakCluster cluster;
+  private RiakClient  client;
 
-  private final AtomicInteger errorCount = new AtomicInteger();
+  private final ObjectMapper               mapper;
+  private final PipelineConfig             pipelineConfig;
+  private final Observable<String>         messages;
+  private final BehaviorSubject<Throwable> errorStream;
+  private final CounterService             counters;
 
   @Autowired
   public RxRiakConnector(ObjectMapper mapper,
                          PipelineConfig pipelineConfig,
-                         RxKafkaConnector kafkaConnector) {
+                         RxKafkaConnector kafkaConnector,
+                         BehaviorSubject<Throwable> errorStream,
+                         CounterService counters) {
     this.mapper = mapper;
     this.pipelineConfig = pipelineConfig;
+    this.errorStream = errorStream;
     this.messages = kafkaConnector.get();
+    this.counters = counters;
   }
 
   @PostConstruct
   public void init() {
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Connecting to Riak hosts: {}", pipelineConfig.getRiak().getHosts());
+    }
+
+    // Transform Set<String> of host:port to a List<RiakNode>
     List<RiakNode> nodes = FastList.newList(pipelineConfig.getRiak().getHosts())
                                    .collectIf(s -> !s.isEmpty(), s -> s.split(":"))
                                    .collect(s -> {
@@ -75,11 +90,12 @@ public class RxRiakConnector implements Action1<String> {
     client = new RiakClient(cluster);
     cluster.start();
 
-    schema = FastList.newListWith(commaDelimitedListToStringArray(pipelineConfig.getRiak().getSchema()));
+    schema = commaDelimitedListToStringArray(pipelineConfig.getRiak().getSchema());
 
     messages.doOnCompleted(cluster::shutdown)
             .doOnError(ex -> {
-              LOG.error(ex.getMessage(), ex);
+              errorStream.onNext(ex);
+              counters.increment(ERROR_COUNT);
             })
             .subscribe(this);
   }
@@ -92,18 +108,22 @@ public class RxRiakConnector implements Action1<String> {
   @Override
   public void call(String msg) {
     try {
+      // Require all values to be strings in the JSON. We'll convert them based on the schema.
       List<String> row = mapper.readValue(msg, new TypeReference<List<String>>() {
       });
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Read row {} from message string.", row);
+      }
 
-      FastList<Cell> cells = FastList.newList(schema.size());
-      if (schema.size() != row.size()) {
+      FastList<Cell> cells = FastList.newList(schema.length);
+      if (schema.length != row.size()) {
         throw new IllegalStateException("Row does not conform to schema. Expected "
                                         + schema
                                         + " but got "
                                         + row);
       }
       for (int len = row.size(), i = 0; i < len; i++) {
-        switch (schema.get(i)) {
+        switch (schema[i]) {
           case "set":
             throw new IllegalArgumentException("DDL type 'set' not supported");
           case "timestamp":
@@ -123,15 +143,18 @@ public class RxRiakConnector implements Action1<String> {
         }
       }
 
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Storing row to Riak bucket {}", pipelineConfig.getRiak().getBucket());
+      }
       client.execute(new Store.Builder(pipelineConfig.getRiak().getBucket())
                          .withRow(new Row(cells))
                          .build());
 
-      if (errorCount.get() > 0) {
-        errorCount.decrementAndGet();
-      }
+      counters.increment(MSG_COUNT);
+      counters.reset(ERROR_COUNT);
     } catch (Exception ex) {
-      LOG.error(ex.getMessage(), ex);
+      counters.increment(ERROR_COUNT);
+      errorStream.onNext(ex);
     }
   }
 
