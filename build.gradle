@@ -164,12 +164,22 @@ docker {
     maintainer 'Jon Brisbin <jbrisbin@basho.com>'
 }
 
-artifactoryPublish {
+artifactory {
     contextUrl = 'https://basholabs.artifactoryonline.com/basholabs'
-    publications('springBoot')
-    clientConfig.publisher.repoKey = 'libs-snapshot-local'
-    clientConfig.publisher.username = System.getenv('ARTIFACTORY_USERNAME')
-    clientConfig.publisher.password = System.getenv('ARTIFACTORY_PASSWORD')
+    publish {
+        repository {
+            repoKey = 'libs-snapshot-local'
+            username = System.getenv('ARTIFACTORY_USERNAME')
+            password = System.getenv('ARTIFACTORY_PASSWORD')
+        }
+        defaults {
+            publications('springBoot')
+            publishArtifacts = true
+        }
+    }
+    resolve {
+        repoKey = 'jcenter'
+    }
 }
 
 task buildDocker(type: Docker, dependsOn: bootRepackage) {
