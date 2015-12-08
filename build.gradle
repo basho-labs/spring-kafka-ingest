@@ -138,6 +138,10 @@ dependencies {
             "ch.qos.logback:logback-classic:$logbackVersion"
 }
 
+springBoot {
+    mainClass = "com.basho.hachiman.ingest.IngestApplication"
+}
+
 docker {
     baseImage 'java:8'
     maintainer 'Jon Brisbin <jbrisbin@basho.com>'
@@ -145,6 +149,7 @@ docker {
 
 task buildDocker(type: Docker, dependsOn: bootRepackage) {
     push = true
+    registry = 'basholabs-docker-dockerv2-local.artifactoryonline.com'
     applicationName = "hachiman-ingest"
     tagVersion = "0.1.0.ALPHA"
     addFile jar.archivePath, "ingester.jar"
