@@ -30,7 +30,7 @@ plugins {
     id 'application'
     id 'publishing'
     id 'com.jfrog.artifactory' version '3.1.0'
-    id 'com.palantir.docker' version '0.3.0'
+    id 'com.bmuschko.docker-java-application' version '2.6.1'
 }
 
 description = 'Riak TS Ingestion library'
@@ -46,6 +46,15 @@ ext {
 
     // Riak
     riakClientVersion = '2.0.2'
+
+    // Docker
+    dockerHost = System.getenv('DOCKER_HOST') ?: 'https://localhost:2376'
+
+    // Build Info
+    bashoArtifactory = 'https://basholabs.artifactoryonline.com/basholabs'
+    buildName = System.getenv('ARTIFACTORY_BUILD_NAME') ?: 'gradle'
+    artifactoryUser = System.getenv('ARTIFACTORY_USERNAME')
+    artifactoryPass = System.getenv('ARTIFACTORY_PASSWORD')
 
     javadocLinks = [
             "http://docs.oracle.com/javase/8/docs/api/",
@@ -197,24 +206,33 @@ springBoot {
 }
 
 docker {
-    name "basholabs-docker-dockerv2-local.artifactoryonline.com/basholabs/${project.name}:${project.version}"
-    dependsOn bootRepackage
-    files jar.archivePath
+    url = "$dockerHost"
+
+    registryCredentials {
+        url = "$bashoArtifactory/dockerv2-local"
+        username = "$artifactoryUser"
+        password = "$artifactoryPass"
+    }
+
+    javaApplication {
+        baseImage = 'java:8'
+        maintainer = 'Jon Brisbin <jbrisbin@basho.com>'
+    }
 }
 
 artifactory {
-    contextUrl = 'https://basholabs.artifactoryonline.com/basholabs'
+    contextUrl = "$bashoArtifactory"
     publish {
         repository {
             repoKey = 'libs-snapshot-local'
-            username = System.getenv('ARTIFACTORY_USERNAME')
-            password = System.getenv('ARTIFACTORY_PASSWORD')
+            username = "$artifactoryUser"
+            password = "$artifactoryPass"
         }
         defaults {
             publications('mavenJava')
             publishArtifacts = true
             properties {
-                mavenJava 'com.basho.hachiman:*:*:*@*', 'buildInfo.build.name': System.getProperty('buildInfo.build.name', 'gradle')
+                mavenJava 'com.basho.hachiman:*:*:*@*', 'buildInfo.build.name': buildName ?: 'gradle'
             }
         }
     }
