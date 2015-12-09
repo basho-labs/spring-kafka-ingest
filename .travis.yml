@@ -4,7 +4,7 @@ services:
 before_script:
 - "docker login -u $ARTIFACTORY_USER -p $ARTIFACTORY_PASS -e $ARTIFACTORY_EMAIL $ARTIFACTORY_DOCKER_REG"
 script:
-- "./gradlew bootRepackage publishToMavenLocal dockerCopyDistResources"
+- "./gradlew bootRepackage publishToMavenLocal dockerBuildImage"
 after_success:
 - "./gradlew artifactoryPublish"
-
+- "docker images"
