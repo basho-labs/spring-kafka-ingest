@@ -48,13 +48,13 @@ ext {
     riakClientVersion = '2.0.2'
 
     // Docker
-    dockerHost = System.getenv('DOCKER_HOST') ?: 'https://localhost:2376'
+    dockerHost = System.getenv('DOCKER_HOST') ?: 'http://localhost:2375'
 
     // Build Info
     bashoArtifactory = 'https://basholabs.artifactoryonline.com/basholabs'
     buildName = System.getenv('ARTIFACTORY_BUILD_NAME') ?: 'gradle'
-    artifactoryUser = System.getenv('ARTIFACTORY_USERNAME')
-    artifactoryPass = System.getenv('ARTIFACTORY_PASSWORD')
+    artifactoryUser = System.getenv('ARTIFACTORY_USER')
+    artifactoryPass = System.getenv('ARTIFACTORY_PASS')
 
     javadocLinks = [
             "http://docs.oracle.com/javase/8/docs/api/",
@@ -217,6 +217,7 @@ docker {
     javaApplication {
         baseImage = 'java:8'
         maintainer = 'Jon Brisbin <jbrisbin@basho.com>'
+        tag = "${project.name}:${project.version}"
     }
 }
 

@@ -2,5 +2,7 @@ language: java
 install: true
 services:
 - docker
+before_script:
+- "docker login -u $ARTIFACTORY_USER -p $ARTIFACTORY_PASS -e $ARTIFACTORY_EMAIL"
 script:
-- "./gradlew publishToMavenLocal dockerBuildImage artifactoryPublish"
+- "./gradlew bootRepackage publishToMavenLocal artifactoryPublish dockerPushImage"
