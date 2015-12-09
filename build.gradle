@@ -49,6 +49,7 @@ ext {
 
     // Docker
     dockerHost = System.getenv('DOCKER_HOST') ?: 'http://localhost:2375'
+    dockerRepo = 'basholabs-docker-dockerv2-local.artifactoryonline.com'
 
     // Build Info
     bashoArtifactory = 'https://basholabs.artifactoryonline.com/basholabs'
@@ -209,7 +210,7 @@ docker {
     url = "$dockerHost"
 
     registryCredentials {
-        url = "$bashoArtifactory/dockerv2-local"
+        url = "$dockerRepo"
         username = "$artifactoryUser"
         password = "$artifactoryPass"
     }
