@@ -7,4 +7,4 @@ script:
 - "./gradlew bootRepackage publishToMavenLocal dockerBuildImage"
 after_success:
 - "./gradlew artifactoryPublish"
-- "docker images"
+- "docker push $ARTIFACTORY_DOCKER_REG/hachiman-ingest"
