@@ -52,8 +52,12 @@ ext {
     dockerRepo = System.getenv('ARTIFACTORY_DOCKER_REG')
 
     // Build Info
-    bashoArtifactory = 'https://basholabs.artifactoryonline.com/basholabs'
-    buildName = System.getenv('ARTIFACTORY_BUILD_NAME') ?: 'gradle'
+    bashoArtifactoryUrl = 'https://basholabs.artifactoryonline.com/basholabs'
+    buildNum = System.getenv('TRAVIS_BUILD_NUMBER')
+    buildId = System.getenv('TRAVIS_BUILD_ID')
+    buildName = System.getenv('TRAVIS_REPO_SLUG')
+    commitHash = System.getenv('TRAVIS_COMMIT')
+    travisBuildLink = "https://travis-ci.com/${buildName}/builds/${buildId}"
     artifactoryUser = System.getenv('ARTIFACTORY_USER')
     artifactoryPass = System.getenv('ARTIFACTORY_PASS')
 
@@ -223,7 +227,7 @@ docker {
 }
 
 artifactory {
-    contextUrl = "$bashoArtifactory"
+    contextUrl = "$bashoArtifactoryUrl"
     publish {
         repository {
             repoKey = 'libs-snapshot-local'
@@ -233,12 +237,14 @@ artifactory {
         defaults {
             publications('mavenJava')
             publishArtifacts = true
-            properties {
-                mavenJava 'com.basho.hachiman:*:*:*@*', 'buildInfo.build.name': "$buildName" ?: 'gradle'
-            }
         }
     }
     resolve {
         repoKey = 'jcenter'
+    }
+    if (buildName) {
+        clientConfig.info.buildName = buildName
+        clientConfig.info.buildNumber = buildNum
+        clientConfig.info.buildUrl = travisBuildLink
     }
 }
