@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import rx.Observable;
+import rx.schedulers.Schedulers;
 import rx.subjects.BehaviorSubject;
 
 import javax.annotation.PostConstruct;
@@ -38,6 +39,7 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
 
   private ConsumerConnector           consumer;
   private KafkaStream<String, String> kafkaStream;
+  private Observable<String>          observable;
 
   @Autowired
   public RxKafkaConnector(PipelineConfig pipelineConfig,
@@ -55,6 +57,16 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
         decoder,
         decoder
     ).iterator().next();
+    this.observable = Observable.from(kafkaStream)
+                                .subscribeOn(Schedulers.io())
+                                .doOnCompleted(() -> {
+                                  if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Stream complete. Shutting down ConsumerConnector...");
+                                  }
+                                  consumer.shutdown();
+                                })
+                                .doOnError(errorStream::onNext)
+                                .map(MessageAndMetadata::message);
   }
 
   @PreDestroy
@@ -64,15 +76,7 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
 
   @Override
   public Observable<String> get() {
-    return Observable.from(kafkaStream)
-                     .doOnCompleted(() -> {
-                       if (LOG.isDebugEnabled()) {
-                         LOG.debug("Stream complete. Shutting down ConsumerConnector...");
-                       }
-                       cleanup();
-                     })
-                     .doOnError(errorStream::onNext)
-                     .map(MessageAndMetadata::message);
+    return observable;
   }
 
   public static ConsumerConfig createConfig(PipelineConfig pipeline) {

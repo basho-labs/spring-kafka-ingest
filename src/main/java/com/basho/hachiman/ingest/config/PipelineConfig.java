@@ -16,24 +16,27 @@ public class PipelineConfig {
     return name;
   }
 
-  public void setName(String name) {
+  public PipelineConfig setName(String name) {
     this.name = name;
+    return this;
   }
 
   public KafkaConfig getKafka() {
     return kafka;
   }
 
-  public void setKafka(KafkaConfig kafka) {
+  public PipelineConfig setKafka(KafkaConfig kafka) {
     this.kafka = kafka;
+    return this;
   }
 
   public RiakConfig getRiak() {
     return riak;
   }
 
-  public void setRiak(RiakConfig riak) {
+  public PipelineConfig setRiak(RiakConfig riak) {
     this.riak = riak;
+    return this;
   }
 
   @Override

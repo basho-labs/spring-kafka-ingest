@@ -1,7 +1,11 @@
 hachiman:
   ingest:
-    group: ${INGEST_GROUP:default}
-    default:
-        config: '{"name": "default",
-        "kafka": {"topic": "default", "zookeepers": ["127.0.0.1:2181"]},
-        "riak": {"bucket": "test-bucket", "hosts": ["192.168.161.16:8087"], "schema":"boolean,timestamp"}}'
+    group: ${INGEST_GROUP:ingest}
+    kafka:
+      topic: ${INGEST_KAFKA_TOPIC:ingest}
+      zookeepers: ${INGEST_KAFKA_ZOOKEEPERS:localhost:2181}
+      brokers: ${INGEST_KAFKA_BROKERS:localhost:9092}
+    riak:
+      bucket: ${INGEST_RIAK_BUCKET:ingest}
+      hosts: ${INGEST_RIAK_HOSTS:localhost:8087}
+      schema: ${INGEST_RIAK_SCHEMA:''}

@@ -2,17 +2,20 @@ package com.basho.hachiman.ingest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import rx.subjects.BehaviorSubject;
+
+import java.io.IOException;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * Simple Spring Boot application to bootstrap the ingester components.
  */
 @SpringBootApplication
-public class IngestApplication implements CommandLineRunner {
+public class IngestApplication {
 
   private static final Logger LOG = LoggerFactory.getLogger(IngestApplication.class);
 
@@ -24,14 +27,21 @@ public class IngestApplication implements CommandLineRunner {
     return BehaviorSubject.create();
   }
 
-  @Override
-  public void run(String... args) throws Exception {
-    // By default just log errors we encounter.
-    errorStream().subscribe(ex -> LOG.error(ex.getMessage(), ex));
-  }
-
   public static void main(String... args) {
-    SpringApplication.run(IngestApplication.class, args);
+    ConfigurableApplicationContext ctx = SpringApplication.run(IngestApplication.class, args);
+    IngestApplication              app = ctx.getBean(IngestApplication.class);
+
+    // If encountering an IOException, kill the system and let cloud provider deal with restarts.
+    app.errorStream().subscribe(ex -> {
+      LOG.error(ex.getMessage(), ex);
+      if (ex instanceof IOException || (null != ex.getCause() && ex.getCause() instanceof IOException)) {
+        ctx.close();
+        while (ctx.isRunning()) {
+          LockSupport.parkNanos(1);
+        }
+        System.exit(-1);
+      }
+    });
   }
 
 }

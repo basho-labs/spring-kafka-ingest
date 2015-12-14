@@ -1,10 +1,11 @@
 package com.basho.hachiman.ingest.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gs.collections.impl.set.mutable.UnifiedSet;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import static org.springframework.util.StringUtils.commaDelimitedListToStringArray;
 
 /**
  * Component that creates a {@link PipelineConfig} from JSON stored in a property based on the ingest group.
@@ -12,19 +13,30 @@ import org.springframework.stereotype.Component;
 @Component
 public class PipelineConfigFactory implements FactoryBean<PipelineConfig> {
 
-  @Value("${hachiman.ingest.${hachiman.ingest.group:default}.config}")
-  private String ingestConfig;
-
-  private final ObjectMapper mapper;
-
-  @Autowired
-  public PipelineConfigFactory(ObjectMapper mapper) {
-    this.mapper = mapper;
-  }
+  @Value("${hachiman.ingest.group}")
+  private String ingestGroup;
+  @Value("${hachiman.ingest.kafka.topic}")
+  private String kafkaTopic;
+  @Value("${hachiman.ingest.kafka.zookeepers}")
+  private String kafkaZookeepers;
+  @Value("${hachiman.ingest.riak.bucket}")
+  private String riakBucket;
+  @Value("${hachiman.ingest.riak.hosts}")
+  private String riakHosts;
+  @Value("${hachiman.ingest.riak.schema}")
+  private String riakSchema;
 
   @Override
   public PipelineConfig getObject() throws Exception {
-    return mapper.readValue(ingestConfig, PipelineConfig.class);
+    return new PipelineConfig()
+        .setName(ingestGroup)
+        .setKafka(new KafkaConfig()
+                      .setTopic(kafkaTopic)
+                      .setZookeepers(UnifiedSet.newSetWith(commaDelimitedListToStringArray(kafkaZookeepers))))
+        .setRiak(new RiakConfig()
+                     .setBucket(riakBucket)
+                     .setSchema(riakSchema)
+                     .setHosts(UnifiedSet.newSetWith(commaDelimitedListToStringArray(riakHosts))));
   }
 
   @Override
