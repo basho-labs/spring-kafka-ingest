@@ -69,7 +69,7 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
                        if (LOG.isDebugEnabled()) {
                          LOG.debug("Stream complete. Shutting down ConsumerConnector...");
                        }
-                       consumer.shutdown();
+                       cleanup();
                      })
                      .doOnError(errorStream::onNext)
                      .map(MessageAndMetadata::message);

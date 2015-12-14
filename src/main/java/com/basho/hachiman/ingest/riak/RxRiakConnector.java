@@ -11,17 +11,21 @@ import com.basho.riak.client.core.query.timeseries.Row;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gs.collections.impl.list.mutable.FastList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.stereotype.Component;
+
 import rx.Observable;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 import rx.subjects.BehaviorSubject;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+
 import java.net.UnknownHostException;
 import java.util.List;
 
@@ -97,6 +101,7 @@ public class RxRiakConnector implements Action1<String> {
               errorStream.onNext(ex);
               counters.increment(ERROR_COUNT);
             })
+            .subscribeOn(Schedulers.io())
             .subscribe(this);
   }
 
