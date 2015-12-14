@@ -1,3 +1,7 @@
 hachiman:
   ingest:
     group: ${INGEST_GROUP:default}
+    default:
+        config: '{"name": "default",
+        "kafka": {"topic": "default", "zookeepers": ["127.0.0.1:2181"]},
+        "riak": {"bucket": "test-bucket", "hosts": ["192.168.161.16:8087"], "schema":"boolean,timestamp"}}'
