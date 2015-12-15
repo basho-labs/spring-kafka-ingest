@@ -35,6 +35,8 @@ public class StringToRowFunction implements Func1<String, Row> {
                              PipelineConfig pipelineConfig) {
     this.mapper = mapper;
     this.schema = commaDelimitedListToStringArray(pipelineConfig.getRiak().getSchema());
+    
+    LOG.info("The Riak TS scheme is: " + Arrays.toString(schema));
   }
 
   @Override
@@ -78,6 +80,11 @@ public class StringToRowFunction implements Func1<String, Row> {
           cells.add(new Cell(row.get(i)));
       }
     }
+    
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Converted to Riak TS row: {}", row);
+    }
+    
     return new Row(cells);
   }
 
