@@ -120,7 +120,7 @@ public class RxRiakConnector implements Action1<Row> {
     } catch (Exception ex) {
       counters.increment(ERROR_COUNT);
       errorStream.onNext(ex);
-      LOG.error(ex.getMessage(), ex);
+      //LOG.error(ex.getMessage(), ex);
     }
   }
 

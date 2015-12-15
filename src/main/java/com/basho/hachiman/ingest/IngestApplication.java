@@ -6,6 +6,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+
+import com.basho.riak.client.core.NoNodesAvailableException;
+
 import rx.subjects.BehaviorSubject;
 
 import java.io.IOException;
@@ -34,7 +37,9 @@ public class IngestApplication {
     // If encountering an IOException, kill the system and let cloud provider deal with restarts.
     app.errorStream().subscribe(ex -> {
       LOG.error(ex.getMessage(), ex);
-      if (ex instanceof IOException || (null != ex.getCause() && ex.getCause() instanceof IOException)) {
+      if (ex instanceof IOException 
+          || (null != ex.getCause() && ex.getCause() instanceof NoNodesAvailableException)
+          || (null != ex.getCause() && ex.getCause() instanceof IOException)) {
         ctx.close();
         while (ctx.isRunning()) {
           LockSupport.parkNanos(1);
