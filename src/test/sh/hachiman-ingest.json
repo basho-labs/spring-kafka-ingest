@@ -1,0 +1,24 @@
+{
+    "id": "hachiman-ingest",
+    "cpus": 0.5,
+    "mem": 256.0,
+    "instances": 1,
+    "container": {
+        "type": "DOCKER",
+        "docker": {
+            "image": "basholabs-docker-dockerv2-local.artifactoryonline.com/hachiman-ingest:0.1.0-SNAPSHOT",
+            "network": "BRIDGE",
+            "portMappings": [
+                { "containerPort": 9080, "hostPort": 0 }
+            ]
+        }
+    },
+    "env": {
+        "INGEST_GROUP": "ingest",
+        "INGEST_KAFKA_TOPIC": "ingest",
+        "INGEST_KAFKA_ZOOKEEPERS": "master.mesos:2181",
+        "INGEST_RIAK_BUCKET": "ingest",
+        "INGEST_RIAK_HOSTS": "riak-director.marathon.mesos:31524",
+        "INGEST_RIAK_SCHEMA": "timestamp,varchar,double,double,varchar,double"
+    }
+}
