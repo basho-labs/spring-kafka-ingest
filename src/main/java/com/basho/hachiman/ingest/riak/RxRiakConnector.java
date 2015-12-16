@@ -98,6 +98,10 @@ public class RxRiakConnector implements Action1<Row> {
             .subscribe(this);
   }
 
+  public RiakClient getRiakClient() {
+    return client;
+  }
+
   @PreDestroy
   public void cleanup() {
     if (running.compareAndSet(true, false)) {
