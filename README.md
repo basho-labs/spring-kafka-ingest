@@ -17,12 +17,32 @@ The ingester is configured via environment variables and/or system properties se
 * `INGEST_RIAK_HOSTS` (default: 'localhost:8087') Comma-separated HOST:PORT values that point to valid Riak TS Protocol Buffers ports.
 * `INGEST_RIAK_SCHEMA` (default: none) Comma-separated string of type names used in the Riak DDL `CREATE TABLE` command. Should correspond to values coming in via JSON string arrays through Kafka. Schema types will be cached when the application is started and values that appear as strings in the JSON array will be converted to the correct types before being inserted into a Riak client `Row` ([javadoc](http://basho.github.io/riak-java-client/2.0.3/index.html?com/basho/riak/client/core/query/timeseries/Row.html)), which is a set of `Cell`s ([javadoc](http://basho.github.io/riak-java-client/2.0.3/index.html?com/basho/riak/client/core/query/timeseries/Cell.html)).
 
-## Start the ingester
+## Deployment
 
-    $ ./gradlew bootRun
+The ingester microservice can be deployed a number of different ways. The build provides a task to create a Docker image which can be pushed a Docker repository (public or private), a "fat" JAR can be created which can be executed via `java -jar`, the Spring Boot application can be run from Gradle via `./gradlew bootRun`, or the `IngestApplication` class can be run via Java main from an IDE.
 
-## Load test data to Kafka topic
+### Deployment in Mesos
 
-You can find example JSON data here: https://github.com/basho-labs/hachiman-ingest/blob/master/src/test/resources/data/2015.json
+To deploy the ingester to Mesos using Marathon and Docker, modify the sample JSON found in the source code at `src/test/sh/hachiman-ingest.json` to reflect your chosen table and bucket names, as well as provide hostname mappings for all the machines your application might connect to. This should include hosts running Kafka and Riak nodes. If using the sample data found inside the project (`src/test/resources/data/2015.json`), then use the provided `INGEST_RIAK_SCHEMA`. If using your own sample data, then the `INGEST_RIAK_SCHEMA` environment variable should reflect the types used in the `CREATE TABLE` statement.
 
-    $ cat ./data/2015.json | /opt/kafka/bin/kafka-console-producer.sh --broker-list localhost:9092 --topic ingest
+You can POST the JSON to Marathon via `curl` like so:
+
+    $ curl -XPOST -H "Content-Type: application/json" -d @./src/test/sh/hachiman-ingest.json http://marathon.mesos:8080/v2/apps
+
+The Docker image referenced in the JSON is a snapshot version being built using Travis CI and deployed to a Basho-internal Artifactory Docker repository. It may be you want to build your own Docker image and host it on your own Docker repository or on Docker Hub. If using a private repository, be aware that Docker requires authentication in the form of a `config.json` file in the user's `$HOME/.docker/` directory. To deploy an image from a private repository on Marathon, a tar.gz file of one entry (`~/.docker/config.json`) should be made available to Mesos either by syncing this file to all slaves, or providing it via a secure method accessible in Marathon's `uris` configuration element. Refer to [the Marathon documentation on private Docker repositories](https://mesosphere.github.io/marathon/docs/native-docker-private-registry.html) for more information.
+
+### Deployment via IDE
+
+If you want to change the code of the source project, then just import the project into your IDE of choice and set up a Run and/or Debug configuration to invoke the main method of `com.basho.hachiman.ingest.IngestApplication`. It doesn't take any arguments, but the environment variables documented above should be filled-in with the appropriate values for your setup.
+
+## Ingesting Data
+
+To ingest data into Riak/TS, send a message to the Kafka topic you've configured that is a single JSON array of strings. All values **must** be strings. They will be converted to the correct types based on those specified in the `INGEST_RIAK_SCHEMA`. For example, the test data has a schema of `varchar,varchar,timestamp,double,double,double`. When dumping this data into Kafka via `kafka-console-producer.sh`, each message should be of the format:
+
+    [ "BG1", "TMP", "1420167600000", "51.563752", "0.177891", "12" ]
+
+The ingester's `RxRiakConnector` component will use `Long.parseLong` or `Double.parseDouble` as the case may be to convert the strings to the correct type of `Cell` to insert into Riak.
+
+For convenience, simply `cat` the test data into `kafka-console-producer.sh`:
+
+    $ cat ./src/test/resources/data/2015.json | kafka-console-producer.sh --broker-list broker-0.kafka.mesos:31000 --topic ingest
