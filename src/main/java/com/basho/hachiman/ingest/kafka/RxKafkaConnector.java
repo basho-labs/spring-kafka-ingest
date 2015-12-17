@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import rx.Observable;
 import rx.schedulers.Schedulers;
-import rx.subjects.BehaviorSubject;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -34,18 +33,14 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
 
   private final StringDecoder decoder = new StringDecoder(null);
 
-  private final PipelineConfig             pipelineConfig;
-  private final BehaviorSubject<Throwable> errorStream;
+  private final PipelineConfig pipelineConfig;
 
   private ConsumerConnector           consumer;
   private KafkaStream<String, String> kafkaStream;
-  private Observable<String>          observable;
 
   @Autowired
-  public RxKafkaConnector(PipelineConfig pipelineConfig,
-                          BehaviorSubject<Throwable> errorStream) {
+  public RxKafkaConnector(PipelineConfig pipelineConfig) {
     this.pipelineConfig = pipelineConfig;
-    this.errorStream = errorStream;
   }
 
   @PostConstruct
@@ -57,16 +52,6 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
         decoder,
         decoder
     ).iterator().next();
-    this.observable = Observable.from(kafkaStream)
-                                .subscribeOn(Schedulers.io())
-                                .doOnCompleted(() -> {
-                                  if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Stream complete. Shutting down ConsumerConnector...");
-                                  }
-                                  consumer.shutdown();
-                                })
-                                .doOnError(errorStream::onNext)
-                                .map(MessageAndMetadata::message);
   }
 
   @PreDestroy
@@ -76,7 +61,9 @@ public class RxKafkaConnector implements Supplier<Observable<String>> {
 
   @Override
   public Observable<String> get() {
-    return observable;
+    return Observable.from(kafkaStream)
+                     .subscribeOn(Schedulers.io())
+                     .map(MessageAndMetadata::message);
   }
 
   public static ConsumerConfig createConfig(PipelineConfig pipeline) {

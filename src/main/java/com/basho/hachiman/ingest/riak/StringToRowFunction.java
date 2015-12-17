@@ -35,14 +35,12 @@ public class StringToRowFunction implements Func1<String, Row> {
                              PipelineConfig pipelineConfig) {
     this.mapper = mapper;
     this.schema = commaDelimitedListToStringArray(pipelineConfig.getRiak().getSchema());
-    
-    LOG.info("The Riak TS scheme is: " + Arrays.toString(schema));
   }
 
   @Override
   public Row call(String msg) {
     // Require all values to be strings in the JSON. We'll convert them based on the schema.
-    List<String> row;
+    List<String> row = null;
     try {
       row = mapper.readValue(msg, new TypeReference<List<String>>() {
       });
@@ -80,11 +78,11 @@ public class StringToRowFunction implements Func1<String, Row> {
           cells.add(new Cell(row.get(i)));
       }
     }
-    
+
     if (LOG.isDebugEnabled()) {
       LOG.debug("Converted to Riak TS row: {}", row);
     }
-    
+
     return new Row(cells);
   }
 

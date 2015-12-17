@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.stereotype.Component;
-import rx.Observable;
 import rx.functions.Action1;
 import rx.subjects.BehaviorSubject;
 
@@ -33,15 +32,15 @@ public class RxRiakConnector implements Action1<Row> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RxRiakConnector.class);
 
-  private static final String ERROR_COUNT = "hachiman.ingest.errorCount";
-  private static final String MSG_COUNT   = "hachiman.ingest.messageCount";
+  static final String ERROR_COUNT = "hachiman.ingest.errorCount";
+  static final String MSG_COUNT   = "hachiman.ingest.messageCount";
 
   private RiakCluster cluster;
   private RiakClient  client;
 
   private final PipelineConfig             pipelineConfig;
+  private final RxKafkaConnector           kafkaConnector;
   private final StringToRowFunction        stringToRowFn;
-  private final Observable<String>         messages;
   private final BehaviorSubject<Throwable> errorStream;
   private final CounterService             counters;
 
@@ -54,9 +53,9 @@ public class RxRiakConnector implements Action1<Row> {
                          BehaviorSubject<Throwable> errorStream,
                          CounterService counters) {
     this.pipelineConfig = pipelineConfig;
+    this.kafkaConnector = kafkaConnector;
     this.stringToRowFn = stringToRowFn;
     this.errorStream = errorStream;
-    this.messages = kafkaConnector.get();
     this.counters = counters;
   }
 
@@ -89,13 +88,17 @@ public class RxRiakConnector implements Action1<Row> {
       cluster.start();
     }
 
-    messages.doOnCompleted(this::cleanup)
-            .doOnError(ex -> {
-              errorStream.onNext(ex);
-              counters.increment(ERROR_COUNT);
-            })
-            .map(stringToRowFn)
-            .subscribe(this);
+    kafkaConnector.get()
+                  .map(msg -> {
+                    try {
+                      return stringToRowFn.call(msg);
+                    } catch (Throwable t) {
+                      counters.increment(ERROR_COUNT);
+                      errorStream.onNext(t);
+                      return new Row();
+                    }
+                  })
+                  .subscribe(this);
   }
 
   public RiakClient getRiakClient() {
@@ -111,6 +114,9 @@ public class RxRiakConnector implements Action1<Row> {
 
   @Override
   public void call(Row row) {
+    if (row.getCells().isEmpty()) {
+      return;
+    }
     try {
       if (LOG.isDebugEnabled()) {
         LOG.debug("Storing row to Riak bucket {}", pipelineConfig.getRiak().getBucket());
@@ -124,7 +130,6 @@ public class RxRiakConnector implements Action1<Row> {
     } catch (Exception ex) {
       counters.increment(ERROR_COUNT);
       errorStream.onNext(ex);
-      //LOG.error(ex.getMessage(), ex);
     }
   }
 
