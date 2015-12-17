@@ -71,7 +71,7 @@ public class DataFlowUnitTests {
   @Test
   public void endToEndDataFlowTest() throws ExecutionException, InterruptedException {
     LOG.debug("Waiting for storing test data to riak-ts...");
-    //Thread.sleep(30000);
+    Thread.sleep(30000);
 
     LocalDateTime from1 = LocalDateTime.of(2015, Month.APRIL, 6, 0, 0);
     LocalDateTime to1 = from1.plusDays(3);
