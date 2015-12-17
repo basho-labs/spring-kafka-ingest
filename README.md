@@ -11,11 +11,46 @@ The ingester is configured via environment variables and/or system properties se
 * `INGEST_GROUP` || `-Dhachiman.ingest.group`=*ingest* - Sets what "group" this instance of the ingester is associated with. Each node that is deployed that uses the same group name will be partitioned with the same consumer group name in the Kafka consumer. If you deploy the ingester via Marathon and specify 5 instances, then there will be 5 different Kafka consumers created, all using the same group name, resulting in a partition of 5 for consuming messages.
 
 * `INGEST_KAFKA_TOPIC` || `-Dhachiman.ingest.kafka.topic`=*ingest* - What Kafka topic whitelist to consume from. This can be a discreet value, like a specific topic name, or a regular expression as discussed in the Kafka consumer API documentation (intro [here](https://cwiki.apache.org/confluence/display/KAFKA/Consumer+API+changes#ConsumerAPIchanges-WhatisaTopicFilter?)).
-* `INGEST_KAFKA_ZOOKEEPERS` (default: 'localhost:2181') Comma-separated HOST:PORT addresses of Zookeeper servers to use to connect to Kafka brokers.
-* `INGEST_KAFKA_BROKERS` (default: 'localhost:9092') Comma-separated HOST:PORT broker list for publishing messages in unit tests. Not used in production.
-* `INGEST_RIAK_BUCKET` (default: 'ingest') Bucket/table name to insert data into. Must match the value used in the DDL `CREATE TABLE` statement used to create the TS bucket type.
-* `INGEST_RIAK_HOSTS` (default: 'localhost:8087') Comma-separated HOST:PORT values that point to valid Riak TS Protocol Buffers ports.
-* `INGEST_RIAK_SCHEMA` (default: none) Comma-separated string of type names used in the Riak DDL `CREATE TABLE` command. Should correspond to values coming in via JSON string arrays through Kafka. Schema types will be cached when the application is started and values that appear as strings in the JSON array will be converted to the correct types before being inserted into a Riak client `Row` ([javadoc](http://basho.github.io/riak-java-client/2.0.3/index.html?com/basho/riak/client/core/query/timeseries/Row.html)), which is a set of `Cell`s ([javadoc](http://basho.github.io/riak-java-client/2.0.3/index.html?com/basho/riak/client/core/query/timeseries/Cell.html)).
+
+* `INGEST_KAFKA_ZOOKEEPERS` || `-Dhachiman.ingest.kafka.zookeepers`=*localhost:2181* - Comma-separated HOST:PORT addresses of Zookeeper servers to use to connect to Kafka brokers.
+
+* `INGEST_KAFKA_BROKERS` || `-Dhachiman.ingest.kafka.brokers`=*localhost:9092* - Comma-separated HOST:PORT broker list for publishing messages in unit tests. Not used in production.
+
+* `INGEST_RIAK_BUCKET` || `-Dhachiman.ingest.riak.bucket`=*ingest* - Bucket/table name to insert data into. Must match the value used in the DDL `CREATE TABLE` statement used to create the TS bucket type.
+
+* `INGEST_RIAK_HOSTS` || `-Dhachiman.ingest.riak.hosts`=*localhost:8087* - Comma-separated HOST:PORT values that point to valid Riak TS Protocol Buffers ports.
+
+* `INGEST_RIAK_SCHEMA` || `-Dhachiman.ingest.riak.schema`= - Comma-separated string of type names used in the Riak DDL `CREATE TABLE` command. Should map 1-to-1 between schema type name and value in the incoming JSON string array. Strings will be converted to the correct types before being inserted into a Riak client `Row` ([javadoc](http://basho.github.io/riak-java-client/2.0.3/index.html?com/basho/riak/client/core/query/timeseries/Row.html)), which is a set of `Cell`s ([javadoc](http://basho.github.io/riak-java-client/2.0.3/index.html?com/basho/riak/client/core/query/timeseries/Cell.html)). Possible mappings are:
+  - `timestamp` -> `java.lang.Long`
+  - `sint64` -> `java.lang.Long`
+  - `double` -> `java.lang.Double`
+  - `boolean` -> `java.lang.Boolean`
+
+#### Schema Example
+
+A schema of `"timestamp,sint64,double,boolean"` would convert an incoming JSON message like this:
+
+```json
+[
+  "123456789",
+  "123456789",
+  "1234.56789",
+  "true"
+]
+```
+
+to this:
+
+```java
+new Row(
+  Cell.newTimestamp(Long.parseLong("123456789")),
+  new Cell(Long.parseLong("123456789")),
+  new Cell(Double.parseDouble("1234.56789")),
+  new Cell(Boolean.valueOf("true"))
+)
+```
+
+The ingester would then issue a `Store` ([javadoc](http://basho.github.io/riak-java-client/2.0.3/index.html?com/basho/riak/client/api/commands/timeseries/Store.html)) command using the Riak Java client.
 
 ## Deployment
 
