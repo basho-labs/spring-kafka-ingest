@@ -1,3 +1,5 @@
+management:
+  port: 9080
 hachiman:
   ingest:
     group: ${INGEST_GROUP:ingest}
