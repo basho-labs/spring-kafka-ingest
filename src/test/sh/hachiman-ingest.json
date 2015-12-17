@@ -9,6 +9,7 @@
             "image": "basholabs-docker-dockerv2-local.artifactoryonline.com/hachiman-ingest:0.1.0-SNAPSHOT",
             "network": "BRIDGE",
             "portMappings": [
+                { "containerPort": 8080, "hostPort": 0 },
                 { "containerPort": 9080, "hostPort": 0 }
             ],
             "parameters": [
@@ -30,7 +31,19 @@
         "INGEST_KAFKA_TOPIC": "ingest",
         "INGEST_KAFKA_ZOOKEEPERS": "mesos-1.riaktsdemo.net:2181",
         "INGEST_RIAK_BUCKET": "ingest",
-        "INGEST_RIAK_HOSTS": "mesos-8.riaktsdemo.net:31524",
+        "INGEST_RIAK_HOSTS": "mesos-5.riaktsdemo.net:31451",
         "INGEST_RIAK_SCHEMA": "timestamp,varchar,double,double,varchar,double"
-    }
+    },
+    "healthChecks": [
+      {
+        "path": "/health",
+        "portIndex": 0,
+        "protocol": "HTTP",
+        "gracePeriodSeconds": 300,
+        "intervalSeconds": 60,
+        "timeoutSeconds": 180,
+        "maxConsecutiveFailures": 5,
+        "ignoreHttp1xx": false
+      }
+    ]
 }
