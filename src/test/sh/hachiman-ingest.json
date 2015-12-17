@@ -23,7 +23,8 @@
                 {"key": "add-host", "value": "mesos-8.riaktsdemo.net:208.43.83.98"},
                 {"key": "add-host", "value": "mesos-9.riaktsdemo.net:208.43.83.106"},
                 {"key": "add-host", "value": "mesos-10.riaktsdemo.net:208.43.83.102"}
-            ]
+            ],
+            "forcePullImage": true
         }
     },
     "env": {
