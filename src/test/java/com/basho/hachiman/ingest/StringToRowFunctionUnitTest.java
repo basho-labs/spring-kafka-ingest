@@ -26,15 +26,15 @@ public class StringToRowFunctionUnitTest {
 
     @Test
     public void canParse2015Row() {
-        String msg = "[\"1425027600000\", \"RG3\", \"51.142082\", \"-0.194181\", \"WSPD\", \"0.8\"]";
+        String msg = "[\"RG3\", \"WSPD\", \"1425027600000\", \"51.142082\", \"-0.194181\", \"0.8\"]";
         List<Cell> cells = stringToRowFunction.call(msg).getCells();
         assertFalse(cells.isEmpty());
         assertEquals(cells.size(), 6);
-        assertTrue(cells.get(0).getTimestamp() == 1425027600000L);
-        assertTrue(cells.get(1).getVarcharAsUTF8String().equals("RG3"));
-        assertTrue(cells.get(2).getDouble() == 51.142082);
-        assertTrue(cells.get(3).getDouble() == -0.194181);
-        assertTrue(cells.get(4).getVarcharAsUTF8String().equals("WSPD"));
+        assertTrue(cells.get(0).getVarcharAsUTF8String().equals("RG3"));
+        assertTrue(cells.get(1).getVarcharAsUTF8String().equals("WSPD"));
+        assertTrue(cells.get(2).getTimestamp() == 1425027600000L);
+        assertTrue(cells.get(3).getDouble() == 51.142082);
+        assertTrue(cells.get(4).getDouble() == -0.194181);
         assertTrue(cells.get(5).getDouble() == 0.8);
     }
 }
