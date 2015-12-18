@@ -84,6 +84,4 @@ For convenience, simply `cat` the test data into `kafka-console-producer.sh`:
 
 ### Verify Ingest
 
-To verify that the ingest actually worked, there is a very simple Python script at `src/test/sh/select_data.py`. Edit
- the script to reference the name used in the `CREATE TABLE` statement and run it with `python
- ./src/test/sh/select_data.py`. It should display the list of keys inserted previously.
+To verify that the ingest actually worked, there is a very simple Python script at `src/test/sh/select_data.py`. Edit the script to reference the hostname and port on which the `riak-director` protobuf proxy is running and the name used in the `CREATE TABLE` statement. Run it with `python ./src/test/sh/select_data.py`. It should display the list of keys inserted previously.
