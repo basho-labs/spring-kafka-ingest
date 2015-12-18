@@ -54,7 +54,7 @@ The ingester would then issue a `Store` ([javadoc](http://basho.github.io/riak-j
 
 ## Deployment
 
-The ingester microservice can be deployed a number of different ways. The build provides a task to create a Docker image which can be pushed a Docker repository (public or private), a "fat" JAR can be created which can be executed via `java -jar`, the Spring Boot application can be run from Gradle via `./gradlew bootRun`, or the `IngestApplication` class can be run via Java main from an IDE.
+The ingester microservice can be deployed a number of different ways. The build provides a task to create a Docker image which can be pushed to a Docker repository (public or private), a "fat" JAR can be created which can be executed via `java -jar`, the Spring Boot application can be run from Gradle via `./gradlew bootRun`, or the `IngestApplication` class can be run via Java main from an IDE.
 
 ### Deployment in Mesos
 
@@ -81,3 +81,9 @@ The ingester's `RxRiakConnector` component will use `Long.parseLong` or `Double.
 For convenience, simply `cat` the test data into `kafka-console-producer.sh`:
 
     $ cat ./src/test/resources/data/2015.json | kafka-console-producer.sh --broker-list broker-0.kafka.mesos:31000 --topic ingest
+
+### Verify Ingest
+
+To verify that the ingest actually worked, there is a very simple Python script at `src/test/sh/select_data.py`. Edit
+ the script to reference the name used in the `CREATE TABLE` statement and run it with `python
+ ./src/test/sh/select_data.py`. It should display the list of keys inserted previously.
