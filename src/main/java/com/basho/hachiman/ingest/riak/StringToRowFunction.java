@@ -58,6 +58,9 @@ public class StringToRowFunction implements Func1<String, Row> {
                                       + " but got "
                                       + row);
     }
+    cells.add(new Cell("1"));
+    cells.add(new Cell("f"));
+    cells.add(Cell.newTimestamp(System.currentTimeMillis()));
     for (int len = row.size(), i = 0; i < len; i++) {
       switch (schema[i]) {
         case "set":

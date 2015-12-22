@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -96,7 +95,7 @@ public class DataFlowUnitTests {
     LOG.debug("Waiting for storing test data to riak-ts...");
     Thread.sleep(30000);
 
-    Long from1 = 1428303600000L - 1000;
+    Long from1 = System.currentTimeMillis() - 100000;
     Long to1 = from1 + twoDays;
 
     String site1 = "BX2";
@@ -158,11 +157,9 @@ public class DataFlowUnitTests {
   }
 
   private String getQuery(Long from, Long to, String site, String species) throws Exception {
-    ZoneId zoneId = ZoneId.of("UTC");
     return "select * from " + pipelineConfigFactory.getObject().getRiak().getBucket() +
-            " where measurementDate > " + from +
-            " and measurementDate < "+ to +
-            " and site = '" + site + "' and species = '" + species + "'";
+            " where (time > " + from +
+            " and time < "+ to + ") and surrogate_key = '1' and family='f'";
   }
 
   private Properties createProducerConfig() {
@@ -195,7 +192,7 @@ public class DataFlowUnitTests {
 
       deleteFuture.await();
       if (!deleteFuture.isSuccess()) {
-        LOG.warn("Deletion faild: {}", deleteFuture.cause());
+        LOG.warn("Deletion failed: {}", deleteFuture.cause());
       }
     }
 
