@@ -3,11 +3,14 @@ package com.basho.hachiman.ingest;
 import com.basho.hachiman.ingest.config.PipelineConfigFactory;
 import com.basho.hachiman.ingest.kafka.RxKafkaConnector;
 import com.basho.hachiman.ingest.riak.RxRiakConnector;
+import com.basho.riak.client.api.commands.kv.FetchValue;
 import com.basho.riak.client.api.commands.timeseries.Delete;
 import com.basho.riak.client.api.commands.timeseries.Query;
 import com.basho.riak.client.core.RiakFuture;
+import com.basho.riak.client.core.query.Location;
 import com.basho.riak.client.core.query.timeseries.Cell;
 import com.basho.riak.client.core.query.timeseries.QueryResult;
+import com.basho.riak.client.core.query.timeseries.Row;
 import com.basho.riak.client.core.util.BinaryValue;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -38,8 +41,6 @@ import static org.junit.Assert.assertTrue;
 public class DataFlowUnitTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(DataFlowUnitTests.class);
-
-  final int twoDays = 1000 * 3600 * 24 * 2;
 
   @Autowired
   RxKafkaConnector app;
@@ -93,73 +94,49 @@ public class DataFlowUnitTests {
   @Test
   public void endToEndDataFlowTest() throws Exception {
     LOG.debug("Waiting for storing test data to riak-ts...");
-    Thread.sleep(30000);
+    Thread.sleep(5000);
 
-    Long from1 = System.currentTimeMillis() - 100000;
-    Long to1 = from1 + twoDays;
+    Long to1 = getLatestTimestamp() + 10;
+    Long from1 = to1 - 6000;
 
-    String site1 = "BX2";
-    String species1 = "WSPD";
-
-    String queryText1 = getQuery(from1, to1, site1, species1);
+    String queryText1 = getQuery(from1, to1);
     LOG.debug("Querying data: {}", queryText1);
 
     Query query1 = new Query.Builder(queryText1).build();
     QueryResult queryResult1 = rxRiakConnector.getRiakClient().execute(query1);
 
-    assertEquals(6, queryResult1.getColumnDescriptions().size());
-    assertEquals(3, queryResult1.getRows().size());
+    List<Row> rows = queryResult1.getRows();
 
-    Long from2 = 1429707600000L - 1000;
-    Long to2 = from2 + twoDays;
+    assertEquals(9, queryResult1.getColumnDescriptions().size());
+    assertEquals(12, rows.size());
 
-    String site2 = "NF1";
-    String queryText2 = getQuery(from2, to2, site2, species1);
-    LOG.debug("Querying data: {}", queryText2);
+    assertEquals(rows.stream().filter(row -> row.getCells().get(3).getVarcharAsUTF8String().equals("BX2")).count(), 3);
+    assertEquals(rows.stream().filter(row -> row.getCells().get(3).getVarcharAsUTF8String().equals("NF1")).count(), 3);
+    assertEquals(rows.stream().filter(row -> row.getCells().get(3).getVarcharAsUTF8String().equals("RG3")).count(), 2);
+    assertEquals(rows.stream().filter(row -> row.getCells().get(3).getVarcharAsUTF8String().equals("TH4")).count(), 4);
 
-    Query query2 = new Query.Builder(queryText2).build();
-    QueryResult queryResult2 = rxRiakConnector.getRiakClient().execute(query2);
+    List<Cell> cells = rows.get(0).getCells();
 
-    assertEquals(3, queryResult2.getRows().size());
-
-    String site3 = "RG3";
-    Long from3 = 1424296800000L - 1000;
-    Long to3 = from3 + twoDays;
-
-    String queryText3 = getQuery(from3, to3, site3, species1);
-    LOG.debug("Querying data: {}", queryText3);
-
-    Query query3 = new Query.Builder(queryText3).build();
-    QueryResult queryResult3 = rxRiakConnector.getRiakClient().execute(query3);
-
-    assertEquals(2, queryResult3.getRows().size());
-
-    String site4 = "TH4";
-    String species4 = "WDIR";
-    Long from4 = 1443247200000L - 1000;
-    Long to4 = from4 + twoDays;
-
-    String queryText4 = getQuery(from4, to4, site4, species4);
-    LOG.debug("Querying data: {}", queryText4);
-
-    Query query4 = new Query.Builder(queryText4).build();
-    QueryResult queryResult4 = rxRiakConnector.getRiakClient().execute(query4);
-
-    assertEquals(4, queryResult4.getRows().size());
-    List<Cell> cells = queryResult4.getRows().get(0).getCells();
-
-    assertTrue(cells.get(0).getVarcharAsUTF8String().equals("TH4"));
-    assertTrue(cells.get(1).getVarcharAsUTF8String().equals("WDIR"));
-    assertTrue(cells.get(2).getTimestamp() == 1443247200000L);
-    assertTrue(cells.get(3).getDouble() == 51.5150461674013);
-    assertTrue(cells.get(4).getDouble() == -0.00841849265642741);
-    assertTrue(cells.get(5).getDouble() == 109);
+    assertTrue(cells.get(3).getVarcharAsUTF8String().equals("BX2"));
+    assertTrue(cells.get(4).getVarcharAsUTF8String().equals("WSPD"));
+    assertTrue(cells.get(5).getTimestamp() == 1428303600000L);
+    assertTrue(cells.get(6).getDouble() == 51.4906102082147);
+    assertTrue(cells.get(7).getDouble() == 0.158914493927518);
+    assertTrue(cells.get(8).getDouble() == 1.4);
   }
 
-  private String getQuery(Long from, Long to, String site, String species) throws Exception {
+  private String getQuery(Long from, Long to) throws Exception {
     return "select * from " + pipelineConfigFactory.getObject().getRiak().getBucket() +
             " where (time > " + from +
             " and time < "+ to + ") and surrogate_key = '1' and family='f'";
+  }
+
+  private Long getLatestTimestamp() throws Exception {
+    Location location = rxRiakConnector.getKVLocation();
+    FetchValue fv = new FetchValue.Builder(location).build();
+    FetchValue.Response response = rxRiakConnector.getRiakClient().execute(fv);
+    String timestamp = response.getValue(String.class);
+    return Long.valueOf(timestamp);
   }
 
   private Properties createProducerConfig() {

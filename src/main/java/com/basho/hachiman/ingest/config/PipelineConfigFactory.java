@@ -21,6 +21,10 @@ public class PipelineConfigFactory implements FactoryBean<PipelineConfig> {
   private String kafkaZookeepers;
   @Value("${hachiman.ingest.riak.bucket}")
   private String riakBucket;
+  @Value("${hachiman.ingest.riak.kv-bucket}")
+  private String riakKvBucket;
+  @Value("${hachiman.ingest.riak.kv-key}")
+  private String riakKvKey;
   @Value("${hachiman.ingest.riak.hosts}")
   private String riakHosts;
   @Value("${hachiman.ingest.riak.schema}")
@@ -35,6 +39,8 @@ public class PipelineConfigFactory implements FactoryBean<PipelineConfig> {
                       .setZookeepers(UnifiedSet.newSetWith(commaDelimitedListToStringArray(kafkaZookeepers))))
         .setRiak(new RiakConfig()
                      .setBucket(riakBucket)
+                     .setKvBucket(riakKvBucket)
+                     .setKvKey(riakKvKey)
                      .setSchema(riakSchema)
                      .setHosts(UnifiedSet.newSetWith(commaDelimitedListToStringArray(riakHosts))));
   }

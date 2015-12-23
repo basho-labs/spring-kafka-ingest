@@ -3,10 +3,15 @@ package com.basho.hachiman.ingest.riak;
 import com.basho.hachiman.ingest.config.PipelineConfig;
 import com.basho.hachiman.ingest.kafka.RxKafkaConnector;
 import com.basho.riak.client.api.RiakClient;
+import com.basho.riak.client.api.commands.kv.StoreValue;
 import com.basho.riak.client.api.commands.timeseries.Store;
 import com.basho.riak.client.core.RiakCluster;
 import com.basho.riak.client.core.RiakNode;
+import com.basho.riak.client.core.query.Location;
+import com.basho.riak.client.core.query.Namespace;
+import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.query.timeseries.Row;
+import com.basho.riak.client.core.util.BinaryValue;
 import com.gs.collections.impl.list.mutable.FastList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +48,7 @@ public class RxRiakConnector implements Action1<Row> {
   private final StringToRowFunction        stringToRowFn;
   private final BehaviorSubject<Throwable> errorStream;
   private final CounterService             counters;
+  private final Location                   kvLocation;
 
   private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -57,6 +63,9 @@ public class RxRiakConnector implements Action1<Row> {
     this.stringToRowFn = stringToRowFn;
     this.errorStream = errorStream;
     this.counters = counters;
+    this.kvLocation = new Location(new Namespace(pipelineConfig.getRiak().getKvBucket(),
+            pipelineConfig.getRiak().getKvBucket()),
+            BinaryValue.create(pipelineConfig.getRiak().getKvKey().getBytes()));
   }
 
   @PostConstruct
@@ -121,16 +130,26 @@ public class RxRiakConnector implements Action1<Row> {
       if (LOG.isDebugEnabled()) {
         LOG.debug("Storing row to Riak bucket {}", pipelineConfig.getRiak().getBucket());
       }
+
+      final long timestamp = row.getCells().get(2).getTimestamp();
+      final RiakObject value = new RiakObject().setValue(BinaryValue.create(String.valueOf(timestamp)));
+      final StoreValue storeCommand = new StoreValue.Builder(value).withLocation(kvLocation).build();
+
       client.execute(new Store.Builder(pipelineConfig.getRiak().getBucket())
                          .withRow(row)
                          .build());
+      client.execute(storeCommand);
 
       counters.increment(MSG_COUNT);
       counters.reset(ERROR_COUNT);
     } catch (Exception ex) {
+      LOG.error("Storing data error: ", ex);
       counters.increment(ERROR_COUNT);
       errorStream.onNext(ex);
     }
   }
 
+  public Location getKVLocation() {
+    return kvLocation;
+  }
 }
