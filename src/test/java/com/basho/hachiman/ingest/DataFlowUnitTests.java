@@ -58,13 +58,16 @@ public class DataFlowUnitTests {
    * Test table creation script:
    *
    * create table '$TABLE_NAME' (
+   * surrogate_key varchar not null,
+   * family varchar not null,
+   * time timestamp not null,
    * site varchar not null,
    * species varchar not null,
    * measurementDate timestamp not null,
    * latitude double,
    * longitude double,
    * value double,
-   * primary key ((site, species, quantum(measurementDate, 24, h)), site, species, measurementDate))"}}
+   * primary key ((surrogate_key, family, quantum(time, 24, h)), surrogate_key, family, time))"}}
    *
    **/
 

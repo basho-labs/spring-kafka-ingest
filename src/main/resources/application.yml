@@ -9,5 +9,7 @@ hachiman:
       brokers: ${INGEST_KAFKA_BROKERS:localhost:9092}
     riak:
       bucket: ${INGEST_RIAK_BUCKET:ingest}
+      kv-bucket: ${INGEST_RIAK_KV_BUCKET:ingest-kv}
+      kv-key: ${INGEST_RIAK_KV_KEY:timestamp}
       hosts: ${INGEST_RIAK_HOSTS:localhost:8087}
-      schema: ${INGEST_RIAK_SCHEMA:''}
+      schema: ${INGEST_RIAK_SCHEMA:varchar,varchar,timestamp,double,double,double}
