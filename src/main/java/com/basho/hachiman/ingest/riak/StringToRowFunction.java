@@ -1,6 +1,7 @@
 package com.basho.hachiman.ingest.riak;
 
 import com.basho.hachiman.ingest.config.PipelineConfig;
+import com.basho.hachiman.ingest.util.MetricUtils;
 import com.basho.riak.client.core.query.timeseries.Cell;
 import com.basho.riak.client.core.query.timeseries.Row;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -29,6 +30,9 @@ public class StringToRowFunction implements Func1<String, Row> {
   private final ObjectMapper mapper;
 
   private String[] schema;
+
+  @Autowired
+  private MetricUtils metricUtils;
 
   @Autowired
   public StringToRowFunction(ObjectMapper mapper,
@@ -60,7 +64,7 @@ public class StringToRowFunction implements Func1<String, Row> {
     }
     cells.add(new Cell("1"));
     cells.add(new Cell("f"));
-    cells.add(Cell.newTimestamp(System.currentTimeMillis()));
+    cells.add(Cell.newTimestamp(metricUtils.incMsgCount()));
     for (int len = row.size(), i = 0; i < len; i++) {
       switch (schema[i]) {
         case "set":

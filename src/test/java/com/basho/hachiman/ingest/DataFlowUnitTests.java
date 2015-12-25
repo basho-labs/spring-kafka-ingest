@@ -3,11 +3,9 @@ package com.basho.hachiman.ingest;
 import com.basho.hachiman.ingest.config.PipelineConfigFactory;
 import com.basho.hachiman.ingest.kafka.RxKafkaConnector;
 import com.basho.hachiman.ingest.riak.RxRiakConnector;
-import com.basho.riak.client.api.commands.kv.FetchValue;
 import com.basho.riak.client.api.commands.timeseries.Delete;
 import com.basho.riak.client.api.commands.timeseries.Query;
 import com.basho.riak.client.core.RiakFuture;
-import com.basho.riak.client.core.query.Location;
 import com.basho.riak.client.core.query.timeseries.Cell;
 import com.basho.riak.client.core.query.timeseries.QueryResult;
 import com.basho.riak.client.core.query.timeseries.Row;
@@ -54,6 +52,9 @@ public class DataFlowUnitTests {
   @Value("${hachiman.ingest.kafka.brokers}")
   private String kafkaBrokers;
 
+  private long riakOffset;
+  private int msgCount;
+
   /**
    * Test table creation script:
    *
@@ -75,6 +76,7 @@ public class DataFlowUnitTests {
   public void setup() throws Exception {
     KafkaProducer<String, String> producer = new KafkaProducer<>(createProducerConfig());
     String topic = pipelineConfigFactory.getObject().getKafka().getTopic();
+    riakOffset = rxRiakConnector.getRiakOffset();
     List<String> lines = Arrays.asList(
             "[ \"BX2\", \"WSPD\", \"1428303600000\", \"51.4906102082147\", \"0.158914493927518\", \"1.4\" ]",
             "[ \"BX2\", \"WSPD\", \"1428307200000\", \"51.4906102082147\", \"0.158914493927518\", \"2.4\" ]",
@@ -89,6 +91,7 @@ public class DataFlowUnitTests {
             "[ \"TH4\", \"WDIR\", \"1443261600000\", \"51.5150461674013\", \"-0.00841849265642741\", \"139\" ]",
             "[ \"TH4\", \"WDIR\", \"1443265200000\", \"51.5150461674013\", \"-0.00841849265642741\", \"169\" ]"
     );
+    msgCount = lines.size();
     for (String message : lines) {
       producer.send(new ProducerRecord<>(topic, message));
     }
@@ -99,10 +102,10 @@ public class DataFlowUnitTests {
     LOG.debug("Waiting for storing test data to riak-ts...");
     Thread.sleep(5000);
 
-    Long to1 = getLatestTimestamp() + 10;
-    Long from1 = to1 - 6000;
+    Long from = riakOffset;
+    Long to = from + msgCount;
 
-    String queryText1 = getQuery(from1, to1);
+    String queryText1 = getQuery(from, to);
     LOG.debug("Querying data: {}", queryText1);
 
     Query query1 = new Query.Builder(queryText1).build();
@@ -130,16 +133,8 @@ public class DataFlowUnitTests {
 
   private String getQuery(Long from, Long to) throws Exception {
     return "select * from " + pipelineConfigFactory.getObject().getRiak().getBucket() +
-            " where (time > " + from +
-            " and time < "+ to + ") and surrogate_key = '1' and family='f'";
-  }
-
-  private Long getLatestTimestamp() throws Exception {
-    Location location = rxRiakConnector.getKVLocation();
-    FetchValue fv = new FetchValue.Builder(location).build();
-    FetchValue.Response response = rxRiakConnector.getRiakClient().execute(fv);
-    String timestamp = response.getValue(String.class);
-    return Long.valueOf(timestamp);
+            " where (time >= " + from +
+            " and time <= "+ to + ") and surrogate_key = '1' and family='f'";
   }
 
   private Properties createProducerConfig() {
@@ -153,18 +148,18 @@ public class DataFlowUnitTests {
   @After
   public void clean() throws Exception {
     List<List<Cell>> keys = Arrays.asList(
-            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(1428303600000L)),
-            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(1428307200000L)),
-            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(1428310800000L)),
-            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(1429707600000L)),
-            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(1429711200000L)),
-            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(1429714800000L)),
-            Arrays.asList(new Cell("RG3"), new Cell("WSPD"), Cell.newTimestamp(1424296800000L)),
-            Arrays.asList(new Cell("RG3"), new Cell("WSPD"), Cell.newTimestamp(1424300400000L)),
-            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(1443247200000L)),
-            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(1443265200000L)),
-            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(1443261600000L)),
-            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(1443265200000L))
+            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(0L)),
+            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(1L)),
+            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(2L)),
+            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(3L)),
+            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(4L)),
+            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(5L)),
+            Arrays.asList(new Cell("RG3"), new Cell("WSPD"), Cell.newTimestamp(6L)),
+            Arrays.asList(new Cell("RG3"), new Cell("WSPD"), Cell.newTimestamp(7L)),
+            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(8L)),
+            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(9L)),
+            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(10L)),
+            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(11L))
     );
     for (List<Cell> keyCells : keys) {
       Delete delete = new Delete.Builder(pipelineConfigFactory.getObject().getRiak().getBucket(), keyCells).build();
@@ -176,6 +171,7 @@ public class DataFlowUnitTests {
       }
     }
 
+    rxRiakConnector.saveRiakOffset(riakOffset);
   }
 
 }
