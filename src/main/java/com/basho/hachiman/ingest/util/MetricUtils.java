@@ -22,13 +22,12 @@ public class MetricUtils {
         this.errCounter = registry.counter(ERROR_COUNT);
     }
 
-    public long incMsgCount() {
-        return incMsgCount(1);
+    public void incMsgCount() {
+        msgCounter.inc();
     }
 
-    public long incMsgCount(long cnt) {
+    public void incMsgCount(long cnt) {
         msgCounter.inc(cnt);
-        return msgCounter.getCount();
     }
 
     public void incErrCount() {

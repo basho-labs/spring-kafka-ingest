@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import rx.functions.Func1;
+import rx.functions.Func2;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -23,7 +23,7 @@ import static org.springframework.util.StringUtils.commaDelimitedListToStringArr
  * A function that maps an incoming string message to a TS Row of typed Cells.
  */
 @Component
-public class StringToRowFunction implements Func1<String, Row> {
+public class StringToRowFunction implements Func2<String, Long, Row> {
 
   private static final Logger LOG = LoggerFactory.getLogger(StringToRowFunction.class);
 
@@ -42,7 +42,7 @@ public class StringToRowFunction implements Func1<String, Row> {
   }
 
   @Override
-  public Row call(String msg) {
+  public Row call(String msg, Long offset) {
     // Require all values to be strings in the JSON. We'll convert them based on the schema.
     List<String> row = null;
     try {
@@ -64,7 +64,7 @@ public class StringToRowFunction implements Func1<String, Row> {
     }
     cells.add(new Cell("1"));
     cells.add(new Cell("f"));
-    cells.add(Cell.newTimestamp(metricUtils.incMsgCount()));
+    cells.add(Cell.newTimestamp(offset));
     for (int len = row.size(), i = 0; i < len; i++) {
       switch (schema[i]) {
         case "set":

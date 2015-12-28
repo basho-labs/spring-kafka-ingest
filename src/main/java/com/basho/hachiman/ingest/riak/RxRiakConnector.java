@@ -28,6 +28,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Component for reacting to string-based messages and parsing them into a {@code List}, turning that into a {@link
@@ -47,6 +48,7 @@ public class RxRiakConnector implements Action1<Row> {
   private final StringToRowFunction        stringToRowFn;
   private final BehaviorSubject<Throwable> errorStream;
   private final Location                   kvLocation;
+  private final AtomicLong                 offset;
 
   @Autowired
   private MetricUtils metricUtils;
@@ -57,7 +59,7 @@ public class RxRiakConnector implements Action1<Row> {
   public RxRiakConnector(PipelineConfig pipelineConfig,
                          RxKafkaConnector kafkaConnector,
                          StringToRowFunction stringToRowFn,
-                         BehaviorSubject<Throwable> errorStream) {
+                         BehaviorSubject<Throwable> errorStream) throws Exception {
     this.pipelineConfig = pipelineConfig;
     this.kafkaConnector = kafkaConnector;
     this.stringToRowFn = stringToRowFn;
@@ -65,6 +67,7 @@ public class RxRiakConnector implements Action1<Row> {
     this.kvLocation = new Location(new Namespace(pipelineConfig.getRiak().getKvBucket(),
             pipelineConfig.getRiak().getKvBucket()),
             BinaryValue.create(pipelineConfig.getRiak().getKvKey().getBytes()));
+    this.offset = new AtomicLong(0L);
   }
 
   @PostConstruct
@@ -96,10 +99,12 @@ public class RxRiakConnector implements Action1<Row> {
       cluster.start();
     }
 
+    offset.set(getRiakOffset());
+
     kafkaConnector.get()
                   .map(msg -> {
                     try {
-                      return stringToRowFn.call(msg);
+                      return stringToRowFn.call(msg, offset.incrementAndGet());
                     } catch (Throwable t) {
                       metricUtils.incErrCount();
                       errorStream.onNext(t);
@@ -107,8 +112,6 @@ public class RxRiakConnector implements Action1<Row> {
                     }
                   })
                   .subscribe(this);
-
-    metricUtils.incMsgCount(getRiakOffset());
   }
 
   public RiakClient getRiakClient() {
@@ -138,6 +141,7 @@ public class RxRiakConnector implements Action1<Row> {
       final long offset = row.getCells().get(2).getTimestamp();
       saveRiakOffset(offset);
 
+      metricUtils.incMsgCount();
       metricUtils.resetErrCount();
     } catch (Exception ex) {
       LOG.error("Storing data error: ", ex);
@@ -148,7 +152,7 @@ public class RxRiakConnector implements Action1<Row> {
 
   public long getRiakOffset() throws Exception {
     FetchValue fv = new FetchValue.Builder(kvLocation).build();
-    FetchValue.Response response = getRiakClient().execute(fv);
+    FetchValue.Response response = client.execute(fv);
     String timestamp = response.getValue(String.class);
     return timestamp != null ? Long.valueOf(timestamp) : 0;
   }

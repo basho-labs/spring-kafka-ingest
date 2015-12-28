@@ -133,7 +133,7 @@ public class DataFlowUnitTests {
 
   private String getQuery(Long from, Long to) throws Exception {
     return "select * from " + pipelineConfigFactory.getObject().getRiak().getBucket() +
-            " where (time >= " + from +
+            " where (time > " + from +
             " and time <= "+ to + ") and surrogate_key = '1' and family='f'";
   }
 

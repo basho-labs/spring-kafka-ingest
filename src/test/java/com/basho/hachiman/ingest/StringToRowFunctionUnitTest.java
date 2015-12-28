@@ -25,7 +25,7 @@ public class StringToRowFunctionUnitTest {
     @Test
     public void canParse2015Row() {
         String msg = "[\"RG3\", \"WSPD\", \"1425027600000\", \"51.142082\", \"-0.194181\", \"0.8\"]";
-        List<Cell> cells = stringToRowFunction.call(msg).getCells();
+        List<Cell> cells = stringToRowFunction.call(msg, 0L).getCells();
         assertFalse(cells.isEmpty());
         assertEquals(cells.size(), 9);
         assertTrue(cells.get(0).getVarcharAsUTF8String().equals("1"));
