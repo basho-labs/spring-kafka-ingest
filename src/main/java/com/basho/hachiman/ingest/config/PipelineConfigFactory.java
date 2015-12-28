@@ -21,6 +21,16 @@ public class PipelineConfigFactory implements FactoryBean<PipelineConfig> {
   private String kafkaZookeepers;
   @Value("${hachiman.ingest.riak.bucket}")
   private String riakBucket;
+  @Value("${hachiman.ingest.riak.surrogateKey}")
+  private String riakSurrogateKey;
+  @Value("${hachiman.ingest.riak.surrogateKeyValue}")
+  private String riakSurrogateKeyValue;
+  @Value("${hachiman.ingest.riak.surrogateFamily}")
+  private String riakSurrogateFamily;
+  @Value("${hachiman.ingest.riak.surrogateFamilyValue}")
+  private String riakSurrogateFamilyValue;
+  @Value("${hachiman.ingest.riak.offsetKey}")
+  private String riakOffsetKey;
   @Value("${hachiman.ingest.riak.kv-bucket}")
   private String riakKvBucket;
   @Value("${hachiman.ingest.riak.kv-key}")
@@ -39,6 +49,11 @@ public class PipelineConfigFactory implements FactoryBean<PipelineConfig> {
                       .setZookeepers(UnifiedSet.newSetWith(commaDelimitedListToStringArray(kafkaZookeepers))))
         .setRiak(new RiakConfig()
                      .setBucket(riakBucket)
+                     .setSurrogateKey(riakSurrogateKey)
+                     .setSurrogateKeyValue(riakSurrogateKeyValue)
+                     .setSurrogateFamily(riakSurrogateFamily)
+                     .setSurrogateFamilyValue(riakSurrogateFamilyValue)
+                     .setOffsetKey(riakOffsetKey)
                      .setKvBucket(riakKvBucket)
                      .setKvKey(riakKvKey)
                      .setSchema(riakSchema)

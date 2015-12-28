@@ -9,7 +9,7 @@ echo "Using bucket type/table name: $TABLE_NAME"
 KV_TABLE_NAME=${RIAK_TABLE:-ingest-kv}
 
 echo "Creating bucket type $TABLE_NAME..."
-$BIN_PATH/riak-admin bucket-type create $TABLE_NAME '{"props":{"n_val": 3, "table_def": "create table '$TABLE_NAME' (surrogate_key varchar not null, family varchar not null, time timestamp not null, site varchar not null, species varchar not null, measurementDate timestamp not null,latitude double,longitude double,value double, primary key ((surrogate_key, family, quantum(time, 24, ''h'')), surrogate_key, family, time))"}}'
+$BIN_PATH/riak-admin bucket-type create $TABLE_NAME '{"props":{"n_val": 3, "table_def": "create table '$TABLE_NAME' (surrogate_key varchar not null, surrogate_family varchar not null, offset timestamp not null, site varchar not null, species varchar not null, measurementDate timestamp not null,latitude double,longitude double,value double, primary key ((surrogate_key, surrogate_family, quantum(offset, 24, ''h'')), surrogate_key, surrogate_family, offset))"}}'
 echo "Activating bucket type $TABLE_NAME..."
 $BIN_PATH/riak-admin bucket-type activate $TABLE_NAME
 

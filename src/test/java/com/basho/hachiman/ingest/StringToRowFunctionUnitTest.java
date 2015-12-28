@@ -1,5 +1,6 @@
 package com.basho.hachiman.ingest;
 
+import com.basho.hachiman.ingest.config.PipelineConfig;
 import com.basho.hachiman.ingest.riak.StringToRowFunction;
 import com.basho.riak.client.core.query.timeseries.Cell;
 import org.junit.Test;
@@ -22,14 +23,17 @@ public class StringToRowFunctionUnitTest {
     @Autowired
     private StringToRowFunction stringToRowFunction;
 
+    @Autowired
+    private PipelineConfig config;
+
     @Test
     public void canParse2015Row() {
         String msg = "[\"RG3\", \"WSPD\", \"1425027600000\", \"51.142082\", \"-0.194181\", \"0.8\"]";
         List<Cell> cells = stringToRowFunction.call(msg, 0L).getCells();
         assertFalse(cells.isEmpty());
         assertEquals(cells.size(), 9);
-        assertTrue(cells.get(0).getVarcharAsUTF8String().equals("1"));
-        assertTrue(cells.get(1).getVarcharAsUTF8String().equals("f"));
+        assertTrue(cells.get(0).getVarcharAsUTF8String().equals(config.getRiak().getSurrogateKeyValue()));
+        assertTrue(cells.get(1).getVarcharAsUTF8String().equals(config.getRiak().getSurrogateFamilyValue()));
         assertNotNull(cells.get(2).getTimestamp());
         assertTrue(cells.get(3).getVarcharAsUTF8String().equals("RG3"));
         assertTrue(cells.get(4).getVarcharAsUTF8String().equals("WSPD"));

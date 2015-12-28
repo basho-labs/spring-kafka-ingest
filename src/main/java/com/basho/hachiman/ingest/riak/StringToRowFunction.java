@@ -1,7 +1,7 @@
 package com.basho.hachiman.ingest.riak;
 
 import com.basho.hachiman.ingest.config.PipelineConfig;
-import com.basho.hachiman.ingest.util.MetricUtils;
+import com.basho.hachiman.ingest.config.RiakConfig;
 import com.basho.riak.client.core.query.timeseries.Cell;
 import com.basho.riak.client.core.query.timeseries.Row;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,17 +28,20 @@ public class StringToRowFunction implements Func2<String, Long, Row> {
   private static final Logger LOG = LoggerFactory.getLogger(StringToRowFunction.class);
 
   private final ObjectMapper mapper;
+  private final String surrogateKeyValue;
+  private final String surrogateFamilyValue;
 
   private String[] schema;
-
-  @Autowired
-  private MetricUtils metricUtils;
 
   @Autowired
   public StringToRowFunction(ObjectMapper mapper,
                              PipelineConfig pipelineConfig) {
     this.mapper = mapper;
-    this.schema = commaDelimitedListToStringArray(pipelineConfig.getRiak().getSchema());
+
+    final RiakConfig riakConfig = pipelineConfig.getRiak();
+    this.surrogateKeyValue = riakConfig.getSurrogateKeyValue();
+    this.surrogateFamilyValue = riakConfig.getSurrogateFamilyValue();
+    this.schema = commaDelimitedListToStringArray(riakConfig.getSchema());
   }
 
   @Override
@@ -62,8 +65,8 @@ public class StringToRowFunction implements Func2<String, Long, Row> {
                                       + " but got "
                                       + row);
     }
-    cells.add(new Cell("1"));
-    cells.add(new Cell("f"));
+    cells.add(new Cell(surrogateKeyValue));
+    cells.add(new Cell(surrogateFamilyValue));
     cells.add(Cell.newTimestamp(offset));
     for (int len = row.size(), i = 0; i < len; i++) {
       switch (schema[i]) {

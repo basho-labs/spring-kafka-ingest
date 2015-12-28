@@ -1,6 +1,7 @@
 package com.basho.hachiman.ingest;
 
-import com.basho.hachiman.ingest.config.PipelineConfigFactory;
+import com.basho.hachiman.ingest.config.PipelineConfig;
+import com.basho.hachiman.ingest.config.RiakConfig;
 import com.basho.hachiman.ingest.kafka.RxKafkaConnector;
 import com.basho.hachiman.ingest.riak.RxRiakConnector;
 import com.basho.riak.client.api.commands.timeseries.Delete;
@@ -44,7 +45,7 @@ public class DataFlowUnitTests {
   RxKafkaConnector app;
 
   @Autowired
-  PipelineConfigFactory pipelineConfigFactory;
+  private PipelineConfig config;
 
   @Autowired
   RxRiakConnector rxRiakConnector;
@@ -58,24 +59,24 @@ public class DataFlowUnitTests {
   /**
    * Test table creation script:
    *
-   * create table '$TABLE_NAME' (
+   * create table '$INGEST_RIAK_BUCKET' (
    * surrogate_key varchar not null,
-   * family varchar not null,
-   * time timestamp not null,
+   * surrogate_family varchar not null,
+   * offset timestamp not null,
    * site varchar not null,
    * species varchar not null,
    * measurementDate timestamp not null,
    * latitude double,
    * longitude double,
    * value double,
-   * primary key ((surrogate_key, family, quantum(time, 24, h)), surrogate_key, family, time))"}}
+   * primary key ((surrogate_key, surrogate_family, quantum(offset, 24, h)), surrogate_key, surrogate_family, offset))"}}
    *
    **/
 
   @Before
   public void setup() throws Exception {
     KafkaProducer<String, String> producer = new KafkaProducer<>(createProducerConfig());
-    String topic = pipelineConfigFactory.getObject().getKafka().getTopic();
+    String topic = config.getKafka().getTopic();
     riakOffset = rxRiakConnector.getRiakOffset();
     List<String> lines = Arrays.asList(
             "[ \"BX2\", \"WSPD\", \"1428303600000\", \"51.4906102082147\", \"0.158914493927518\", \"1.4\" ]",
@@ -132,9 +133,12 @@ public class DataFlowUnitTests {
   }
 
   private String getQuery(Long from, Long to) throws Exception {
-    return "select * from " + pipelineConfigFactory.getObject().getRiak().getBucket() +
-            " where (time > " + from +
-            " and time <= "+ to + ") and surrogate_key = '1' and family='f'";
+    final RiakConfig riakConfig = config.getRiak();
+    return "select * from " + riakConfig.getBucket() +
+            " where (" + riakConfig.getOffsetKey() + " > " + from +
+            " and " + riakConfig.getOffsetKey() + " <= "+ to + ")" +
+            " and " + riakConfig.getSurrogateKey() + " = '" + riakConfig.getSurrogateKeyValue() + "'" +
+            " and " + riakConfig.getSurrogateFamily() + "='" + riakConfig.getSurrogateFamilyValue() + "'";
   }
 
   private Properties createProducerConfig() {
@@ -162,7 +166,7 @@ public class DataFlowUnitTests {
             Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(11L))
     );
     for (List<Cell> keyCells : keys) {
-      Delete delete = new Delete.Builder(pipelineConfigFactory.getObject().getRiak().getBucket(), keyCells).build();
+      Delete delete = new Delete.Builder(config.getRiak().getBucket(), keyCells).build();
       final RiakFuture<Void, BinaryValue> deleteFuture = rxRiakConnector.getRiakClient().executeAsync(delete);
 
       deleteFuture.await();

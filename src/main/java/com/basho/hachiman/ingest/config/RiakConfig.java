@@ -8,6 +8,11 @@ import java.util.Set;
 public class RiakConfig {
 
   private String      bucket;
+  private String      surrogateKey;
+  private String      surrogateKeyValue;
+  private String      surrogateFamily;
+  private String      surrogateFamilyValue;
+  private String      offsetKey;
   private String      kvBucket;
   private String      kvKey;
   private Set<String> hosts;
@@ -16,9 +21,14 @@ public class RiakConfig {
   public RiakConfig() {
   }
 
-  public RiakConfig(String bucket, String kvBucket, String kvKey, Set<String> hosts, String schema) {
+  public RiakConfig(String bucket, String surrogateKey, String surrogateKeyValue, String surrogateFamily, String surrogateFamilyValue, String offsetKey, String kvBucket, String kvKey, Set<String> hosts, String schema) {
     super();
     this.bucket = bucket;
+    this.surrogateKey = surrogateKey;
+    this.surrogateKeyValue = surrogateKeyValue;
+    this.surrogateFamily = surrogateFamily;
+    this.surrogateFamilyValue = surrogateFamilyValue;
+    this.offsetKey = offsetKey;
     this.kvBucket = kvBucket;
     this.kvKey = kvKey;
     this.hosts = hosts;
@@ -31,6 +41,51 @@ public class RiakConfig {
 
   public RiakConfig setBucket(String bucket) {
     this.bucket = bucket;
+    return this;
+  }
+
+  public String getSurrogateKey() {
+    return surrogateKey;
+  }
+
+  public RiakConfig setSurrogateKey(String surrogateKey) {
+    this.surrogateKey = surrogateKey;
+    return this;
+  }
+
+  public String getSurrogateKeyValue() {
+    return surrogateKeyValue;
+  }
+
+  public RiakConfig setSurrogateKeyValue(String surrogateKeyValue) {
+    this.surrogateKeyValue = surrogateKeyValue;
+    return this;
+  }
+
+  public String getSurrogateFamily() {
+    return surrogateFamily;
+  }
+
+  public RiakConfig setSurrogateFamily(String surrogateFamily) {
+    this.surrogateFamily = surrogateFamily;
+    return this;
+  }
+
+  public String getSurrogateFamilyValue() {
+    return surrogateFamilyValue;
+  }
+
+  public RiakConfig setSurrogateFamilyValue(String surrogateFamilyValue) {
+    this.surrogateFamilyValue = surrogateFamilyValue;
+    return this;
+  }
+
+  public String getOffsetKey() {
+    return offsetKey;
+  }
+
+  public RiakConfig setOffsetKey(String offsetKey) {
+    this.offsetKey = offsetKey;
     return this;
   }
 
@@ -74,6 +129,11 @@ public class RiakConfig {
   public String toString() {
     return "RiakConfig{" +
            "bucket='" + bucket  + '\'' +
+           ", surrogateKey='" + surrogateKey + '\'' +
+           ", surrogateKeyValue='" + surrogateKeyValue + '\'' +
+           ", surrogateFamily='" + surrogateFamily + '\'' +
+           ", surrogateFamilyValue='" + surrogateFamilyValue + '\'' +
+           ", offsetKey='" + offsetKey + '\'' +
            ", kvBucket='" + kvBucket + '\'' +
            ", kvKey='" + kvKey + '\'' +
            ", hosts=" + hosts +
@@ -89,6 +149,11 @@ public class RiakConfig {
     RiakConfig config = (RiakConfig) o;
 
     if (bucket != null ? !bucket.equals(config.bucket) : config.bucket != null) return false;
+    if (surrogateKey != null ? !surrogateKey.equals(config.surrogateKey) : config.surrogateKey != null) return false;
+    if (surrogateKeyValue != null ? !surrogateKeyValue.equals(config.surrogateKeyValue) : config.surrogateKeyValue != null) return false;
+    if (surrogateFamily != null ? !surrogateFamily.equals(config.surrogateFamily) : config.surrogateFamily != null) return false;
+    if (surrogateFamilyValue != null ? !surrogateFamilyValue.equals(config.surrogateFamilyValue) : config.surrogateFamilyValue != null) return false;
+    if (offsetKey != null ? !offsetKey.equals(config.offsetKey) : config.offsetKey != null) return false;
     if (kvBucket != null ? !kvBucket.equals(config.kvBucket) : config.kvBucket != null) return false;
     if (kvKey != null ? !kvKey.equals(config.kvKey) : config.kvKey != null) return false;
     if (hosts != null ? !hosts.equals(config.hosts) : config.hosts != null) return false;
@@ -99,6 +164,11 @@ public class RiakConfig {
   @Override
   public int hashCode() {
     int result = bucket != null ? bucket.hashCode() : 0;
+    result = 31 * result + (surrogateKey != null ? surrogateKey.hashCode() : 0);
+    result = 31 * result + (surrogateKeyValue != null ? surrogateKeyValue.hashCode() : 0);
+    result = 31 * result + (surrogateFamily != null ? surrogateFamily.hashCode() : 0);
+    result = 31 * result + (surrogateFamilyValue != null ? surrogateFamilyValue.hashCode() : 0);
+    result = 31 * result + (offsetKey != null ? offsetKey.hashCode() : 0);
     result = 31 * result + (kvBucket != null ? kvBucket.hashCode() : 0);
     result = 31 * result + (kvKey != null ? kvKey.hashCode() : 0);
     result = 31 * result + (hosts != null ? hosts.hashCode() : 0);

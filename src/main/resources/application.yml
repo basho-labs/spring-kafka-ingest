@@ -9,6 +9,11 @@ hachiman:
       brokers: ${INGEST_KAFKA_BROKERS:localhost:9092}
     riak:
       bucket: ${INGEST_RIAK_BUCKET:ingest}
+      surrogateKey: ${INGEST_RIAK_SURROGATE_KEY:surrogate_key}
+      surrogateKeyValue: ${INGEST_RIAK_SURROGATE_KEY_VALUE:k}
+      surrogateFamily: ${INGEST_RIAK_SURROGATE_FAMILY:surrogate_family}
+      surrogateFamilyValue: ${INGEST_RIAK_SURROGATE_FAMILY_VALUE:f}
+      offsetKey: ${INGEST_RIAK_OFFSET_KEY:offset}
       kv-bucket: ${INGEST_RIAK_KV_BUCKET:ingest-kv}
       kv-key: ${INGEST_RIAK_KV_KEY:timestamp}
       hosts: ${INGEST_RIAK_HOSTS:localhost:8087}
