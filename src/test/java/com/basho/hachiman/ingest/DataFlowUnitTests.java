@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -151,20 +152,13 @@ public class DataFlowUnitTests {
 
   @After
   public void clean() throws Exception {
-    List<List<Cell>> keys = Arrays.asList(
-            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(0L)),
-            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(1L)),
-            Arrays.asList(new Cell("BX2"), new Cell("WSPD"), Cell.newTimestamp(2L)),
-            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(3L)),
-            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(4L)),
-            Arrays.asList(new Cell("NF1"), new Cell("WSPD"), Cell.newTimestamp(5L)),
-            Arrays.asList(new Cell("RG3"), new Cell("WSPD"), Cell.newTimestamp(6L)),
-            Arrays.asList(new Cell("RG3"), new Cell("WSPD"), Cell.newTimestamp(7L)),
-            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(8L)),
-            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(9L)),
-            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(10L)),
-            Arrays.asList(new Cell("TH4"), new Cell("WDIR"), Cell.newTimestamp(11L))
-    );
+    final RiakConfig riakConfig = config.getRiak();
+    final Cell surKeyCell = new Cell(riakConfig.getSurrogateKeyValue());
+    final Cell surFamCell = new Cell(riakConfig.getSurrogateFamilyValue());
+    List<List<Cell>> keys = new ArrayList<>();
+    for (int i = 1; i < 13; i++) {
+      keys.add(Arrays.asList(surKeyCell, surFamCell, Cell.newTimestamp(riakOffset + i)));
+    }
     for (List<Cell> keyCells : keys) {
       Delete delete = new Delete.Builder(config.getRiak().getBucket(), keyCells).build();
       final RiakFuture<Void, BinaryValue> deleteFuture = rxRiakConnector.getRiakClient().executeAsync(delete);
