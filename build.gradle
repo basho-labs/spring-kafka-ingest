@@ -138,7 +138,7 @@ dependencies {
 
     // Riak
     compile "io.netty:netty-all:4.0.33.Final",
-            "com.basho.riak:dataplatform-riak-client:1.1.0"
+            "com.basho.riak:dataplatform-riak-client:1.2.0-beta1"
 
     // Kafka
     compile("org.apache.kafka:kafka_2.11:0.8.2.2") {

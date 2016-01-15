@@ -108,8 +108,8 @@ public class DataFlowUnitTests {
     Query query1 = new Query.Builder(queryText1).build();
     QueryResult queryResult1 = rxRiakConnector.getRiakClient().execute(query1);
 
-    assertEquals(6, queryResult1.getColumnDescriptions().size());
-    assertEquals(3, queryResult1.getRows().size());
+    assertEquals(6, queryResult1.getColumnDescriptionsCopy().size());
+    assertEquals(3, queryResult1.getRowsCopy().size());
 
     Long from2 = 1429707600000L - 1000;
     Long to2 = from2 + twoDays;
@@ -121,7 +121,7 @@ public class DataFlowUnitTests {
     Query query2 = new Query.Builder(queryText2).build();
     QueryResult queryResult2 = rxRiakConnector.getRiakClient().execute(query2);
 
-    assertEquals(3, queryResult2.getRows().size());
+    assertEquals(3, queryResult2.getRowsCopy().size());
 
     String site3 = "RG3";
     Long from3 = 1424296800000L - 1000;
@@ -133,7 +133,7 @@ public class DataFlowUnitTests {
     Query query3 = new Query.Builder(queryText3).build();
     QueryResult queryResult3 = rxRiakConnector.getRiakClient().execute(query3);
 
-    assertEquals(2, queryResult3.getRows().size());
+    assertEquals(2, queryResult3.getRowsCopy().size());
 
     String site4 = "TH4";
     String species4 = "WDIR";
@@ -146,8 +146,8 @@ public class DataFlowUnitTests {
     Query query4 = new Query.Builder(queryText4).build();
     QueryResult queryResult4 = rxRiakConnector.getRiakClient().execute(query4);
 
-    assertEquals(4, queryResult4.getRows().size());
-    List<Cell> cells = queryResult4.getRows().get(0).getCells();
+    assertEquals(4, queryResult4.getRowsCopy().size());
+    List<Cell> cells = queryResult4.getRowsCopy().get(0).getCellsCopy();
 
     assertTrue(cells.get(0).getVarcharAsUTF8String().equals("TH4"));
     assertTrue(cells.get(1).getVarcharAsUTF8String().equals("WDIR"));
@@ -191,7 +191,7 @@ public class DataFlowUnitTests {
     );
     for (List<Cell> keyCells : keys) {
       Delete delete = new Delete.Builder(pipelineConfigFactory.getObject().getRiak().getBucket(), keyCells).build();
-      final RiakFuture<Void, BinaryValue> deleteFuture = rxRiakConnector.getRiakClient().executeAsync(delete);
+      final RiakFuture<Void, String> deleteFuture = rxRiakConnector.getRiakClient().executeAsync(delete);
 
       deleteFuture.await();
       if (!deleteFuture.isSuccess()) {

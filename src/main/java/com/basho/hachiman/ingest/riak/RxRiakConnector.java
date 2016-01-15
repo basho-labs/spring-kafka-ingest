@@ -114,7 +114,7 @@ public class RxRiakConnector implements Action1<Row> {
 
   @Override
   public void call(Row row) {
-    if (row.getCells().isEmpty()) {
+    if (row.getCellsCopy().isEmpty()) {
       return;
     }
     try {
