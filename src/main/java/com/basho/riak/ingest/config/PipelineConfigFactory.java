@@ -1,4 +1,4 @@
-package com.basho.hachiman.ingest.config;
+package com.basho.riak.ingest.config;
 
 import com.gs.collections.impl.set.mutable.UnifiedSet;
 import org.springframework.beans.factory.FactoryBean;
@@ -13,17 +13,17 @@ import static org.springframework.util.StringUtils.commaDelimitedListToStringArr
 @Component
 public class PipelineConfigFactory implements FactoryBean<PipelineConfig> {
 
-  @Value("${hachiman.ingest.group}")
+  @Value("${riak.ingest.group}")
   private String ingestGroup;
-  @Value("${hachiman.ingest.kafka.topic}")
+  @Value("${riak.ingest.kafka.topic}")
   private String kafkaTopic;
-  @Value("${hachiman.ingest.kafka.zookeepers}")
+  @Value("${riak.ingest.kafka.zookeepers}")
   private String kafkaZookeepers;
-  @Value("${hachiman.ingest.riak.bucket}")
+  @Value("${riak.ingest.riak.bucket}")
   private String riakBucket;
-  @Value("${hachiman.ingest.riak.hosts}")
+  @Value("${riak.ingest.riak.hosts}")
   private String riakHosts;
-  @Value("${hachiman.ingest.riak.schema}")
+  @Value("${riak.ingest.riak.schema}")
   private String riakSchema;
 
   @Override

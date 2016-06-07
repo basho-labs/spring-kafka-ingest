@@ -1,6 +1,6 @@
-package com.basho.hachiman.ingest;
+package com.basho.riak.ingest;
 
-import com.basho.hachiman.ingest.riak.StringToRowFunction;
+import com.basho.riak.ingest.riak.StringToRowFunction;
 import com.basho.riak.client.core.query.timeseries.Cell;
 import org.junit.Test;
 import org.junit.runner.RunWith;

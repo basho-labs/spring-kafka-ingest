@@ -1,12 +1,12 @@
-package com.basho.hachiman.ingest.riak;
+package com.basho.riak.ingest.riak;
 
-import com.basho.hachiman.ingest.config.PipelineConfig;
-import com.basho.hachiman.ingest.kafka.RxKafkaConnector;
 import com.basho.riak.client.api.RiakClient;
 import com.basho.riak.client.api.commands.timeseries.Store;
 import com.basho.riak.client.core.RiakCluster;
 import com.basho.riak.client.core.RiakNode;
 import com.basho.riak.client.core.query.timeseries.Row;
+import com.basho.riak.ingest.config.PipelineConfig;
+import com.basho.riak.ingest.kafka.RxKafkaConnector;
 import com.gs.collections.impl.list.mutable.FastList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,6 @@ import rx.subjects.BehaviorSubject;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,17 +31,17 @@ public class RxRiakConnector implements Action1<Row> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RxRiakConnector.class);
 
-  static final String ERROR_COUNT = "hachiman.ingest.errorCount";
-  static final String MSG_COUNT   = "hachiman.ingest.messageCount";
+  static final String ERROR_COUNT = "riak.ingest.errorCount";
+  static final String MSG_COUNT = "riak.ingest.messageCount";
 
   private RiakCluster cluster;
-  private RiakClient  client;
+  private RiakClient client;
 
-  private final PipelineConfig             pipelineConfig;
-  private final RxKafkaConnector           kafkaConnector;
-  private final StringToRowFunction        stringToRowFn;
+  private final PipelineConfig pipelineConfig;
+  private final RxKafkaConnector kafkaConnector;
+  private final StringToRowFunction stringToRowFn;
   private final BehaviorSubject<Throwable> errorStream;
-  private final CounterService             counters;
+  private final CounterService counters;
 
   private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -67,38 +66,29 @@ public class RxRiakConnector implements Action1<Row> {
 
     // Transform Set<String> of host:port to a List<RiakNode>
     List<RiakNode> nodes = FastList.newList(pipelineConfig.getRiak().getHosts())
-                                   .collectIf(s -> !s.isEmpty(), s -> s.split(":"))
-                                   .collect(s -> {
-                                     try {
-                                       return new RiakNode.Builder()
-                                           .withRemoteAddress(s[0])
-                                           .withRemotePort(Integer.valueOf(s[1]))
-                                           .build();
-                                     } catch (UnknownHostException e) {
-                                       throw new IllegalArgumentException(e);
-                                     }
-                                   });
-    try {
-      cluster = RiakCluster.builder(nodes).build();
-    } catch (UnknownHostException e) {
-      throw new IllegalArgumentException(e.getMessage(), e);
-    }
+        .collectIf(s -> !s.isEmpty(), s -> s.split(":"))
+        .collect(s -> new RiakNode.Builder()
+            .withRemoteAddress(s[0])
+            .withRemotePort(Integer.valueOf(s[1]))
+            .build());
+
+    cluster = RiakCluster.builder(nodes).build();
     client = new RiakClient(cluster);
     if (running.compareAndSet(false, true)) {
       cluster.start();
     }
 
     kafkaConnector.get()
-                  .map(msg -> {
-                    try {
-                      return stringToRowFn.call(msg);
-                    } catch (Throwable t) {
-                      counters.increment(ERROR_COUNT);
-                      errorStream.onNext(t);
-                      return new Row();
-                    }
-                  })
-                  .subscribe(this);
+        .map(msg -> {
+          try {
+            return stringToRowFn.call(msg);
+          } catch (Throwable t) {
+            counters.increment(ERROR_COUNT);
+            errorStream.onNext(t);
+            return new Row();
+          }
+        })
+        .subscribe(this);
   }
 
   public RiakClient getRiakClient() {
@@ -122,8 +112,8 @@ public class RxRiakConnector implements Action1<Row> {
         LOG.debug("Storing row to Riak bucket {}", pipelineConfig.getRiak().getBucket());
       }
       client.execute(new Store.Builder(pipelineConfig.getRiak().getBucket())
-                         .withRow(row)
-                         .build());
+          .withRow(row)
+          .build());
 
       counters.increment(MSG_COUNT);
       counters.reset(ERROR_COUNT);

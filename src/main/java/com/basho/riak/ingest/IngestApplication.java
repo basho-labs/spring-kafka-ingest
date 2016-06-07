@@ -1,4 +1,4 @@
-package com.basho.hachiman.ingest;
+package com.basho.riak.ingest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

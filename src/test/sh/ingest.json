@@ -1,0 +1,39 @@
+{
+    "id": "spring-kafka-ingest",
+    "cpus": 0.5,
+    "mem": 512.0,
+    "instances": 1,
+    "container": {
+        "type": "DOCKER",
+        "docker": {
+            "image": "basholabs-docker-dockerv2-local.artifactoryonline.com/spring-kafka-ingest:0.1.0-SNAPSHOT",
+            "network": "BRIDGE",
+            "portMappings": [
+                { "containerPort": 8080, "hostPort": 0 },
+                { "containerPort": 9080, "hostPort": 0 }
+            ],
+            "forcePullImage": true
+        }
+    },
+    "env": {
+        "JAVA_OPTS": "-Dmanagement.port=9080",
+        "INGEST_GROUP": "ingest",
+        "INGEST_KAFKA_TOPIC": "ingest",
+        "INGEST_KAFKA_ZOOKEEPERS": "master.mesos:2181",
+        "INGEST_RIAK_BUCKET": "ingest",
+        "INGEST_RIAK_HOSTS": "riak-director.marathon.mesos:31998",
+        "INGEST_RIAK_SCHEMA": "varchar,varchar,timestamp,double,double,double"
+    },
+    "healthChecks": [
+      {
+        "path": "/health",
+        "portIndex": 1,
+        "protocol": "HTTP",
+        "gracePeriodSeconds": 300,
+        "intervalSeconds": 60,
+        "timeoutSeconds": 180,
+        "maxConsecutiveFailures": 5,
+        "ignoreHttp1xx": false
+      }
+    ]
+}

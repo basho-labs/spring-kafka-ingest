@@ -1,6 +1,6 @@
-package com.basho.hachiman.ingest.riak;
+package com.basho.riak.ingest.riak;
 
-import com.basho.hachiman.ingest.config.PipelineConfig;
+import com.basho.riak.ingest.config.PipelineConfig;
 import com.basho.riak.client.core.query.timeseries.Cell;
 import com.basho.riak.client.core.query.timeseries.Row;
 import com.fasterxml.jackson.core.type.TypeReference;

@@ -20,7 +20,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.3.0.RELEASE',
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.3.5.RELEASE',
                 'org.jfrog.buildinfo:build-info-extractor-gradle:3.1.0'
     }
 }
@@ -34,18 +34,15 @@ plugins {
 }
 
 description = 'Riak TS Ingestion library'
-group = 'com.basho.hachiman'
+group = 'com.basho.riak'
 
 ext {
-    gradleVersion = '2.9'
+    gradleVersion = '2.13'
     gradleScriptDir = "${rootProject.projectDir}/gradle"
 
     // Logging
-    slf4jVersion = '1.7.12'
-    logbackVersion = '1.1.3'
-
-    // Riak
-    riakClientVersion = '2.0.2'
+    slf4jVersion = '1.7.21'
+    logbackVersion = '1.1.7'
 
     // Docker
     dockerHost = System.getenv('DOCKER_HOST') ?: 'http://localhost:2375'
@@ -133,12 +130,12 @@ dependencies {
             "org.springframework.boot:spring-boot-starter-actuator"
 
     // RxJava
-    compile "io.reactivex:rxjava:1.0.16",
+    compile "io.reactivex:rxjava:1.1.5",
             "io.reactivex:rxjava-reactive-streams:1.0.1"
 
     // Riak
-    compile "io.netty:netty-all:4.0.33.Final",
-            "com.basho.riak:dataplatform-riak-client:1.2.0-beta1"
+    compile "io.netty:netty-all:4.0.36.Final",
+            "com.basho.riak:dataplatform-riak-client:1.5.0"
 
     // Kafka
     compile("org.apache.kafka:kafka_2.11:0.8.2.2") {
@@ -195,9 +192,9 @@ publishing {
                     }
 
                     scm {
-                        connection 'scm:git:ssh://github.com/basho-labs/hachiman-ingest.git'
-                        developerConnection 'scm:git:ssh://github.com/basho-labs/hachiman-ingest.git'
-                        url 'https://github.com/basho-labs/hachiman-ingest'
+                        connection 'scm:git:ssh://github.com/basho-labs/spring-kafka-ingest.git'
+                        developerConnection 'scm:git:ssh://github.com/basho-labs/spring-kafka-ingest.git'
+                        url 'https://github.com/basho-labs/spring-kafka-ingest'
                         tag 'HEAD'
                     }
                 }
@@ -207,7 +204,7 @@ publishing {
 }
 
 springBoot {
-    mainClass = "com.basho.hachiman.ingest.IngestApplication"
+    mainClass = "com.basho.riak.ingest.IngestApplication"
 }
 
 docker {

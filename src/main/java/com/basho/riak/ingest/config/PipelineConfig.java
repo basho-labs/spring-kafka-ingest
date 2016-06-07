@@ -1,4 +1,4 @@
-package com.basho.hachiman.ingest.config;
+package com.basho.riak.ingest.config;
 
 /**
  * Domain object that encapsulates the configuration settings for an ingestion pipeline.

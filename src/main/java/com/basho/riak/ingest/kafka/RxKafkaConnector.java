@@ -1,7 +1,7 @@
-package com.basho.hachiman.ingest.kafka;
+package com.basho.riak.ingest.kafka;
 
 
-import com.basho.hachiman.ingest.config.PipelineConfig;
+import com.basho.riak.ingest.config.PipelineConfig;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.KafkaStream;

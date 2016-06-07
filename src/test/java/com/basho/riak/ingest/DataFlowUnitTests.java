@@ -1,14 +1,13 @@
-package com.basho.hachiman.ingest;
+package com.basho.riak.ingest;
 
-import com.basho.hachiman.ingest.config.PipelineConfigFactory;
-import com.basho.hachiman.ingest.kafka.RxKafkaConnector;
-import com.basho.hachiman.ingest.riak.RxRiakConnector;
+import com.basho.riak.ingest.config.PipelineConfigFactory;
+import com.basho.riak.ingest.kafka.RxKafkaConnector;
+import com.basho.riak.ingest.riak.RxRiakConnector;
 import com.basho.riak.client.api.commands.timeseries.Delete;
 import com.basho.riak.client.api.commands.timeseries.Query;
 import com.basho.riak.client.core.RiakFuture;
 import com.basho.riak.client.core.query.timeseries.Cell;
 import com.basho.riak.client.core.query.timeseries.QueryResult;
-import com.basho.riak.client.core.util.BinaryValue;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -51,7 +50,7 @@ public class DataFlowUnitTests {
   @Autowired
   RxRiakConnector rxRiakConnector;
 
-  @Value("${hachiman.ingest.kafka.brokers}")
+  @Value("${riak.ingest.kafka.brokers}")
   private String kafkaBrokers;
 
   /**

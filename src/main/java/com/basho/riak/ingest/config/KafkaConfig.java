@@ -1,4 +1,4 @@
-package com.basho.hachiman.ingest.config;
+package com.basho.riak.ingest.config;
 
 import java.util.Set;
 

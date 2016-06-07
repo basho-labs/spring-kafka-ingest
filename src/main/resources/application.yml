@@ -1,6 +1,6 @@
 management:
   port: 9080
-hachiman:
+riak:
   ingest:
     group: ${INGEST_GROUP:ingest}
     kafka:
