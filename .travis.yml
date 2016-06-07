@@ -1,10 +1,3 @@
 language: java
-services:
-- docker
-before_script:
-- "docker login -u $ARTIFACTORY_USER -p $ARTIFACTORY_PASS -e $ARTIFACTORY_EMAIL $ARTIFACTORY_DOCKER_REG"
 script:
-- "./gradlew bootRepackage publishToMavenLocal dockerBuildImage"
-after_success:
-- "./gradlew artifactoryPublish"
-- "docker push $ARTIFACTORY_DOCKER_REG/hachiman-ingest"
+- "./gradlew publishToMavenLocal"
